@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class IntsavibeappConfig(AppConfig):
+class InstavibeappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'intsavibeapp'
+    name = 'instavibeapp'
