@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-@login_required
 def home_view(request):
     return render(request, 'instavibeapp/home.html')
 
@@ -19,7 +18,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, "Logged in successfully.")
-            return redirect('home')  # change 'home' to the correct URL name if needed
+            return redirect('instavibeapp:home')  
         else:
             messages.error(request, "Invalid username or password.")
     

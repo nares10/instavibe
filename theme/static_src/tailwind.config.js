@@ -2,9 +2,8 @@
 module.exports = {
   content: [
     // Tell Tailwind to scan Django templates
-    '../templates/**/*.html',
+    '../../**/templates/**/*.html',
     '../../templates/**/*.html',
-    './templates/**/*.html',
   ],
   theme: {
     extend: {

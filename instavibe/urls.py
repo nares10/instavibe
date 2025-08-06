@@ -22,6 +22,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('instavibeapp.urls')),
+    path('accounts/', include('allauth.urls')),  # this line for adding google social login by allauth
 ]
 
 if settings.DEBUG:

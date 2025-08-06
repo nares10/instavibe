@@ -1,0 +1,39 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.env
+.env.*
+db.sqlite3
+
+# Django
+/staticfiles/
+/media/
+/*.log
+
+# VS Code
+.vscode/
+
+# Node/Tailwind
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.*
+!.gitignore
+
+# Tailwind
+theme/static/
+theme/__pycache__/
+
+# Misc
+STEPS.md
+ui*
+*.json
