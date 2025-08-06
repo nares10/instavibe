@@ -4,8 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .forms import ProfileForm
-from .models import Post
+from .models import Post, Like, Comment
 
 
 def home_view(request):
@@ -182,3 +184,35 @@ def delete_post(request, post_id):
         return redirect('instavibeapp:profile')
     
     return render(request, 'instavibeapp/delete_post.html', {'post': post})
+
+@login_required
+@require_POST
+def like_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    like = Like.objects.filter(user=request.user, post=post).first()
+    
+    if like:
+        # User already liked the post, so unlike it
+        like.delete()
+        is_liked = False
+    else:
+        # User hasn't liked the post, so create a like
+        Like.objects.create(user=request.user, post=post)
+        is_liked = True
+    
+    return redirect('instavibeapp:profile')
+
+@login_required
+def add_comment(request, post_id):
+    if request.method == "POST":
+        post_id = request.POST.get("post_id")
+        comment_text = request.POST.get("comment")
+        post = Post.objects.get(id=post_id)
+        Comment.objects.create(user=request.user, post=post, text=comment_text)
+    return redirect('instavibeapp:profile')
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    comment.delete()
+    return redirect('instavibeapp:profile')

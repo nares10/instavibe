@@ -63,4 +63,35 @@ class Post(models.Model):
         # Delete image file when post is deleted
         self.image.delete(save=False)
         super().delete(*args, **kwargs)
+    
+        
+    @property
+    def likes_count(self):
+        return self.likes.count()
 
+    @property
+    def comments_count(self):
+        return self.comments.count()
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post')  # Prevent duplicate likes
+
+    def __str__(self):
+        return f"{self.user.username} likes {self.post}"
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username}'s comment on {self.post}"
