@@ -1,12 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home - Instavibe</title>
-</head>
-<body>
-    <h1>Welcome to Instavibe</h1>
-    <p>Your one-stop solution for all things social media.</p>
-</body>
-</html>
+{% extends 'instavibeapp/base.html' %}
+
+{% block title %}Home -{% endblock %}
+
+{% block content %}
+    <h1>Welcome to the Instavibe App</h1>
+    {% if user.is_authenticated %}
+        <p>Hello, <strong>{{ user.username }}</strong>! You are logged in.</p>
+        <a href="{% url 'instavibeapp:logout' %}">Logout</a>
+    {% else %}
+        <p>You are not logged in. Please log in or create an account.</p>
+        <a href="{% url 'instavibeapp:login' %}">Login</a> | <a href="{% url 'instavibeapp:register' %}">Register</a>
+    {% endif %}
+
+{% endblock %}

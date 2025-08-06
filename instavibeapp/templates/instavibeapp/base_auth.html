@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}InstaVibe{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% load static tailwind_tags %}
+  {% tailwind_css %}
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center text-gray-800">
+
+
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+    .font-logo {
+      font-family: 'Pacifico', cursive;
+    }
+  </style>
+
+</body>
+</html>
