@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'django_extensions',
+    'widget_tweaks',
 ]
 
 
@@ -72,6 +73,7 @@ if DEBUG:
     # Add django_browser_reload middleware only in DEBUG mode
     MIDDLEWARE += [
         "django_browser_reload.middleware.BrowserReloadMiddleware",
+        
     ]
 
 ROOT_URLCONF = 'instavibe.urls'
@@ -191,3 +193,5 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGIN_ON_GET = True
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

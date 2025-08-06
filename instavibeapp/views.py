@@ -4,6 +4,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
+from .forms import ProfileForm
+
 
 def home_view(request):
     return render(request, 'instavibeapp/home.html')
@@ -17,7 +19,6 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
-            messages.success(request, "Logged in successfully.")
             return redirect('instavibeapp:home')  
         else:
             messages.error(request, "Invalid username or password.")
@@ -101,7 +102,6 @@ def register_view(request):
         # Create user
         user = User.objects.create_user(username=username, password=password)
         user.save()
-        messages.success(request, "Registration successful. Please log in.")
         return redirect('instavibeapp:login')
     
     return render(request, 'instavibeapp/register.html')
@@ -109,9 +109,32 @@ def register_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.info(request, "Logged out successfully.")
     return redirect('instavibeapp:login')
 
 
 def test_view(request):
     return render(request, 'instavibeapp/test.html')
+
+@login_required
+def profile_view(request):
+    profile = request.user.profile
+    return render(request, 'instavibeapp/profile.html', {'profile': profile})
+
+
+@login_required
+def edit_profile_view(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        bio = request.POST.get('bio', '')
+        image = request.FILES.get('image')
+        date_of_birth = request.POST.get('date_of_birth', None)
+        gender = request.POST.get('gender', '')
+
+        profile.bio = bio
+        if image:
+            profile.image = image
+        profile.date_of_birth = date_of_birth if date_of_birth else None
+        profile.gender = gender
+        profile.save()
+        return redirect('instavibeapp:profile')
+    return render(request, 'instavibeapp/edit_profile.html', {'profile': profile})
