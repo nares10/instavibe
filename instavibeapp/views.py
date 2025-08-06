@@ -1,10 +1,11 @@
 import re
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import ProfileForm
+from .models import Post
 
 
 def home_view(request):
@@ -138,3 +139,46 @@ def edit_profile_view(request):
         profile.save()
         return redirect('instavibeapp:profile')
     return render(request, 'instavibeapp/edit_profile.html', {'profile': profile})
+
+@login_required
+def create_post(request):
+    if request.method == 'POST':
+        image = request.FILES.get('image')
+        caption = request.POST.get('caption', '')
+        
+        if image:
+            post = Post.objects.create(
+                owner=request.user,
+                image=image,
+                caption=caption
+            )
+            messages.success(request, "Post created successfully!")
+            return redirect('instavibeapp:profile')
+        else:
+            messages.error(request, "Image is required!")
+    
+    return render(request, 'instavibeapp/create_post.html')
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id, owner=request.user)
+    
+    if request.method == 'POST':
+        caption = request.POST.get('caption', '')
+        post.caption = caption
+        post.save()
+        messages.success(request, "Post updated successfully!")
+        return redirect('instavibeapp:profile')
+    
+    return render(request, 'instavibeapp/edit_post.html', {'post': post})
+
+@login_required
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id, owner=request.user)
+    
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, "Post deleted successfully!")
+        return redirect('instavibeapp:profile')
+    
+    return render(request, 'instavibeapp/delete_post.html', {'post': post})

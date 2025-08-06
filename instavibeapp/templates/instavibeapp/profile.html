@@ -1,12 +1,81 @@
 {% extends 'instavibeapp/base.html' %}
 {% block content %}
-<a href='{% url 'instavibeapp:home' %}'> Back To Home</a>
-  <h2>{{ profile.user.username }}'s Profile</h2>
-  {% if profile.image %}
-    <img src="{{ profile.image.url }}" alt="Profile Image" width="150">
-  {% endif %}
-  <p><strong>Bio:</strong> {{ profile.bio }}</p>
-  <p><strong>Date of Birth:</strong> {{ profile.date_of_birth }}</p>
-  <p><strong>Gender:</strong> {{ profile.gender }}</p>
-  <a href="{% url 'instavibeapp:edit_profile' %}">Edit Profile</a>
+<div class="container mx-auto px-4 py-8">
+    {# Profile Header Section #}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <a href='{% url 'instavibeapp:home' %}' class="text-blue-600 hover:underline mb-4 inline-block">
+            ← Back To Home
+        </a>
+        
+        <div class="flex items-center gap-8">
+            {# Profile Image #}
+            <div class="flex-shrink-0">
+                {% if profile.image %}
+                    <img src="{{ profile.image.url }}" alt="Profile Image" 
+                         class="w-32 h-32 rounded-full object-cover border-2 border-gray-200" width="150">
+                {% endif %}
+            </div>
+            
+            {# Profile Info #}
+            <div class="flex-grow">
+                <h2 class="text-2xl font-bold mb-4">{{ profile.user.username }}'s Profile</h2>
+                <div class="space-y-2">
+                    <p><strong>Bio:</strong> {% if profile.bio %}{{ profile.bio }}{% else %}No bio available{% endif %}</p>
+                    <p><strong>Date of Birth:</strong> {% if profile.date_of_birth %}{{ profile.date_of_birth }}{% else %}Not specified{% endif %}</p>
+                    <p><strong>Gender:</strong> {% if profile.gender %}{{ profile.gender }}{% else %}Not specified{% endif %}</p>
+                </div>
+            </div>
+            
+            {# Action Buttons #}
+            <div class="flex gap-4">
+                <a href="{% url 'instavibeapp:edit_profile' %}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg mx-6 hover:bg-blue-700 transition duration-200">
+                    Edit Profile
+                </a>
+                <a href="{% url 'instavibeapp:create_post' %}" 
+                   class="bg-green-600 text-white px-4 py-2 mx-6 rounded-lg hover:bg-green-700 transition duration-200">
+                    Create Post
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Posts Grid Section #}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-6">Posts</h3>
+        
+        {% if user.posts.all %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for post in user.posts.all %}
+                    <div class="bg-gray-50 rounded-lg overflow-hidden shadow-md">
+                        {# Post Image #}
+                        <img src="{{ post.image.url }}" width="150" alt="Post Image" 
+                             class="w-full h-64 object-cover">
+                        
+                        {# Post Details #}
+                        <div class="p-4">
+                            {# Caption #}
+                            <p class="text-gray-800 mb-2">{{ post.caption|truncatechars:100 }}</p>
+                            
+                            {# Post Meta #}
+                            <div class="text-sm text-gray-500">
+                                Posted on {{ post.created_at|date:"M d, Y" }}
+                            </div>
+                            
+                            {# Action Buttons #}
+                            <div class="flex gap-2 mt-4">
+                                <a href="{% url 'instavibeapp:edit_post' post.id %}" 
+                                   class="text-blue-600 hover:underline">Edit</a>
+                                <a href="{% url 'instavibeapp:delete_post' post.id %}" 
+                                   class="text-red-600 hover:underline">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-500 text-center py-8">No posts yet.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
