@@ -9,20 +9,24 @@
         
         <div class="space-y-4">
             <div class="flex flex-col items-center">
-                <div id="imagePreview"  class="hidden mb-4">
+                <div id="imagePreview"  class=" mb-4">
                     <img src="" alt="Preview" width="150" class="max-w-md rounded-lg shadow-md">
                 </div>
                 
-                <div class="relative inline-block w-full">
+                <div class="relative inline-block  text-black">
                     <input type="file" name="image" id="image" accept="image/*" required
-                           class="hidden">
+                           class="ring-2 ring-blue-500 focus:ring-blue-500 focus:ring-opacity-50 
+                                  file:mr-4 file:py-2 file:px-4 file:border-0 
+                                  file:text-sm file:font-semibold file:bg-blue-100 
+                                  file:text-blue-700 hover:file:bg-blue-200 
+                                  rounded-lg cursor-pointer text-black">
                 </div>
             </div>
 
             <div>
                 <label for="caption" class="block text-sm font-medium text-gray-700 mb-2">Caption</label>
                 <textarea name="caption" id="caption" rows="4"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                          class="w-full text-black px-4 py-2 border border-gray-300 rounded-lg 
                                  focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Write a caption..."></textarea>
             </div>

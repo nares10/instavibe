@@ -1,10 +1,11 @@
 {% extends 'instavibeapp/base.html' %}
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+{% load static %}
+<div class="bg-white container mx-auto px-4 py-8">
     {# Profile Header Section #}
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="rounded-lg shadow-md p-6 mb-8">
         <a href='{% url 'instavibeapp:home' %}' class="text-blue-600 hover:underline mb-4 inline-block">
-            ← Back To Home
+            <img src="{% static 'instavibeapp/images/black--back-button.png' %}" alt="Back Button" width="20" height="20" class="h-8 inline-block">
         </a>
         
         <div class="flex items-center gap-8">
@@ -13,11 +14,14 @@
                 {% if profile.image %}
                     <img src="{{ profile.image.url }}" alt="Profile Image" 
                          class="w-32 h-32 rounded-full object-cover border-2 border-gray-200" width="150">
+                {% else %}
+                    <img src="{% static 'instavibeapp/images/default-profile.png' %}" alt="Default Profile Image" 
+                         class="w-32 h-32 rounded-full object-cover border-2 border-gray-200" width="150">
                 {% endif %}
             </div>
             
             {# Profile Info #}
-            <div class="flex-grow">
+            <div class="flex-grow text-black">
                 <h2 class="text-2xl font-bold mb-4">{{ profile.user.username }}'s Profile</h2>
                 <div class="space-y-2">
                     <p><strong>Bio:</strong> {% if profile.bio %}{{ profile.bio }}{% else %}No bio available{% endif %}</p>
@@ -25,32 +29,36 @@
                     <p><strong>Gender:</strong> {% if profile.gender %}{{ profile.gender }}{% else %}Not specified{% endif %}</p>
                 </div>
             </div>
-            
+        </div>
+                    
             {# Action Buttons #}
-            <div class="flex gap-4">
-                <a href="{% url 'instavibeapp:edit_profile' %}" 
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg mx-6 hover:bg-blue-700 transition duration-200">
-                    Edit Profile
-                </a>
-                <a href="{% url 'instavibeapp:create_post' %}" 
+            <div class="flex gap-2 justify-between mt-6 md:justify-start md:gap-4">
+                {% if user == profile.user %}
+                    <a href="{% url 'instavibeapp:edit_profile' %}" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'instavibeapp:create_post' %}" 
                    class="bg-green-600 text-white px-4 py-2 mx-6 rounded-lg hover:bg-green-700 transition duration-200">
                     Create Post
                 </a>
+                {% endif %}
+                <br/>
             </div>
-        </div>
     </div>
 
     {# Posts Grid Section #}
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-lg shadow-md p-6 text-black">
         <h3 class="text-xl font-semibold mb-6">Posts</h3>
         
-        {% if user.posts.all %}
+        {% if posts %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for post in user.posts.all %}
-                    <div class="bg-gray-50 rounded-lg overflow-hidden shadow-md">
+                {% for post in posts %}
+                    {# Update the post-card class to include transition #}
+                    <div id="post-{{ post.id }}" class="post-card bg-gray-50 rounded-lg overflow-hidden shadow-md transition duration-300">
                         {# Post Image #}
-                        <img src="{{ post.image.url }}" width="150" alt="Post Image" 
-                             class="w-full h-64 object-cover">
+                        <img src="{{ post.image.url }}" alt="Post Image"
+                        class="w-[150px] h-[150px] object-cover rounded-t-lg">
                         
                         {# Post Details #}
                         <div class="p-4">
@@ -62,6 +70,19 @@
                                 Posted on {{ post.created_at|date:"M d, Y" }}
                             </div>
                             
+                            {# Like Button #}
+                            <div class="flex items-center gap-2 mt-4">
+                                <button class="like-button flex items-center gap-2" 
+                                        data-post-id="{{ post.id }}">
+                                    <svg class="w-6 h-6 {% if user in post.likes.all %}text-red-500{% else %}text-gray-500{% endif %} 
+                                              transition duration-200 hover:scale-110"
+                                         fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    <span class="likes-count">{{ post.likes_count }}</span>
+                                </button>
+                            </div>
+                            
                             {# Action Buttons #}
                             <div class="flex gap-2 mt-4">
                                 <a href="{% url 'instavibeapp:edit_post' post.id %}" 
@@ -69,47 +90,49 @@
                                 <a href="{% url 'instavibeapp:delete_post' post.id %}" 
                                    class="text-red-600 hover:underline">Delete</a>
                             </div>
-                        </div>
+                            {# Comments Section #}
+                            <div class="mt-4">
+                                <form method="POST" action="{% url 'instavibeapp:add_comment' post.id %}" class="flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="text" name="text" 
+                                           placeholder="Add a comment..." 
+                                           class="flex-grow px-3 py-1 border rounded-lg">
+                                    <button type="submit" 
+                                            class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        Post
+                                    </button>
+                                </form>
 
-                        {# Like Button #}
-                        <div class="flex items-center gap-2 mt-4">
-                            <button class="like-button" data-post-id="{{ post.id }}" 
-                                    data-liked="{% if user in post.likes.all %}true{% else %}false{% endif %}">
-                                <svg class="w-6 h-6 {% if user in post.likes.all %}text-red-500{% else %}text-gray-500{% endif %} 
-                                          transition duration-200 hover:scale-110"
-                                     fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                </svg>
-                            </button>
-                            <span class="likes-count">{{ post.likes_count }}</span> likes
-                        </div>
-
-                        {# Comments Section #}
-                        <div class="mt-4">
-                            <h4 class="font-semibold">Comments</h4>
-                            <form class="add-comment-form mt-2 flex gap-2" data-post-id="{{ post.id }}">
-                                {% csrf_token %}
-                                <input type="text" name="comment" placeholder="Add a comment..." 
-                                       class="flex-grow px-3 py-2 border rounded-lg" required>
-                                <button type="submit" 
-                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
-                                    Post
-                                </button>
-                            </form>
-                            
-                            {# Display Comments #}
-                            <div class="comments-container">
-                                {% for comment in post.comments.all %}
-                                    <div class="comment" id="comment-{{ comment.id }}">
-                                        <span class="font-medium">{{ comment.user.username }}:</span>
-                                        {{ comment.text }}
-                                        {% if user == comment.user %}
-                                            <button class="delete-comment text-red-600 text-sm ml-2" 
-                                                    data-comment-id="{{ comment.id }}">Delete</button>
-                                        {% endif %}
-                                    </div>
-                                {% endfor %}
+                                <div class="comments-container mt-2">
+                                    {% if post.comments.count > 0 %}
+                                        {% comment %} Display up to 1 comment per post {% endcomment %}
+                                        {% for comment in post.comments.all|slice:":1" %}
+                                            <div class="comment p-2 bg-gray-50 rounded-lg">
+                                                <span class="font-medium">{{ comment.user.username }}:</span>
+                                                {{ comment.text }}
+                                                {% if user == comment.user %}
+                                                    <form method="POST" action="{% url 'instavibeapp:delete_comment' comment.id %}" 
+                                                          class="inline" onsubmit="return confirm('Delete this comment?')">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="text-red-600 text-sm ml-2">
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-2">
+                                                <a href="{% url 'instavibeapp:view_comments' post.id %}" 
+                                                   class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block">
+                                                    View All Comments ({{ post.comments.count }})
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-gray-500">No comments yet.</p>
+                                    {% endif %}
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 {% endfor %}
@@ -119,4 +142,18 @@
         {% endif %}
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if there's a hash in the URL
+        if (window.location.hash) {
+            const element = document.querySelector(window.location.hash);
+            if (element) {
+                // Wait a bit for everything to load and then scroll
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
+    });
+</script>
 {% endblock %}

@@ -1,14 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html class="bg-white">
 <head>
     <title>{% block title %}InstaVibe{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    {% load tailwind_tags %}
+    {% tailwind_css %}
+    {% load static %}
 </head>
-<body>
-    <main>
+<body class="flex flex-col bg-white">
+<div>    
+    <!-- Navbar -->
+    <div id="nav-bar" class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white px-4 py-2 shadow-md border-b">
+        <div class="flex items-center gap-2">
+            <img class="logo" alt="App logo" src="{% static 'instavibeapp/images/logo.png' %}" width="50" height="50">
+            <h1 class="text-lg text-black font-semibold">Instavibe App</h1>
+        </div>
+        <div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'instavibeapp:logout' %}" class="text-lg text-black font-semibold">Logout</a>
+            {% else %}
+                <a href="{% url 'instavibeapp:login' %}" class="text-lg text-black font-semibold">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <main class="flex-1 w-full bg-white mt-5">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Fixed Footer -->
+    <div id="foot-bar" class="fixed bottom-0 left-0 right-0 z-50 bg-white px-4 py-2 shadow-md border-t">
+        <div class="flex justify-between items-center py-2">
+            <a href="{% url 'instavibeapp:home' %}">
+                <img src="{% static 'instavibeapp/images/home-dark-icon.svg' %}" alt="Home Icon" class="w-6 h-6 mb-1" />
+            </a>
+            <a href="{% url 'instavibeapp:profile' %}">
+                <img src="{% static 'instavibeapp/images/dark-profile-round-.svg' %}" alt="Profile Icon" class="w-6 h-6 mb-1" />
+            </a>
+        </div>
+    </div>
+</div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get CSRF token
@@ -51,20 +82,23 @@
                     const postId = this.dataset.postId;
                     const input = this.querySelector('input');
                     const text = input.value.trim();
-                    
+
                     if (!text) return;
                     
                     const response = await fetch(`/post/${postId}/comment/`, {
                         method: 'POST',
+                        
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
                             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                         },
-                        body: `text=${encodeURIComponent(text)}`
+                        body: `text=${text}`
                     });
                     
                     const data = await response.json();
+                    console.log("Comment response:", data);  // ✅ Add this
                     if (data.status === 'success') {
+                        console.log("Comment response:", data);
                         const commentHtml = `
                             <div class="comment" id="comment-${data.comment_id}">
                                 <span class="font-medium">${data.username}:</span>
@@ -95,3 +129,4 @@
     </script>
 </body>
 </html>
+    

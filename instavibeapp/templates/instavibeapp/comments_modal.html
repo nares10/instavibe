@@ -1,0 +1,121 @@
+<div id="comments-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg w-full max-w-lg max-h-[80vh] overflow-hidden relative">
+        {# Modal Header #}
+        <div class="border-b px-4 py-3 flex items-center justify-between sticky top-0 bg-white z-10">
+            <h3 class="text-xl font-semibold text-gray-900">Comments</h3>
+            <button onclick="closeCommentsModal()" class="text-gray-400 hover:text-gray-500">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        {# Comments List #}
+        <div class="overflow-y-auto p-4 max-h-[calc(80vh-120px)]">
+            {% for comment in comments %}
+                <div class="comment mb-4 p-3 bg-gray-50 rounded-lg" id="comment-{{ comment.id }}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            {% if comment.user.profile.image %}
+                                <img src="{{ comment.user.profile.image.url }}" 
+                                     alt="Profile" 
+                                     class="w-8 h-8 rounded-full object-cover">
+                            {% endif %}
+                            <span class="font-medium">{{ comment.user.username }}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">
+                            {{ comment.created_at|timesince }} ago
+                        </span>
+                    </div>
+                    <p class="mt-2 text-gray-700">{{ comment.text }}</p>
+                    {% if user == comment.user %}
+                        <button class="delete-comment text-red-600 text-sm mt-2" 
+                                data-comment-id="{{ comment.id }}">
+                            Delete
+                        </button>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-center text-gray-500 py-4">No comments yet</p>
+            {% endfor %}
+        </div>
+
+        {# Add Comment Form #}
+        <div class="border-t px-4 py-3 sticky bottom-0 bg-white">
+            <form class="add-comment-form flex gap-2" data-post-id="{{ post.id }}">
+                {% csrf_token %}
+                <input type="text" name="text" 
+                       placeholder="Add a comment..." 
+                       class="flex-grow px-4 py-2 border border-gray-300 rounded-lg 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg 
+                               hover:bg-blue-700 transition duration-200">
+                    Post
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCommentsModal() {
+    document.getElementById('comments-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCommentsModal() {
+    document.getElementById('comments-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.getElementById('comments-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCommentsModal();
+    }
+});
+
+// Add new comment functionality
+document.querySelector('.add-comment-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const postId = this.dataset.postId;
+    const input = this.querySelector('input');
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    try {
+        const response = await fetch(`/post/${postId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `text=${encodeURIComponent(text)}`
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+            const commentsContainer = document.querySelector('.overflow-y-auto');
+            const newComment = `
+                <div class="comment mb-4 p-3 bg-gray-50 rounded-lg" id="comment-${data.comment_id}">
+                    <div class="flex items-center justify-between">
+                        <span class="font-medium">${data.username}</span>
+                        <span class="text-sm text-gray-500">Just now</span>
+                    </div>
+                    <p class="mt-2 text-gray-700">${data.text}</p>
+                    <button class="delete-comment text-red-600 text-sm mt-2" 
+                            data-comment-id="${data.comment_id}">
+                        Delete
+                    </button>
+                </div>
+            `;
+            commentsContainer.insertAdjacentHTML('afterbegin', newComment);
+            input.value = '';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+</script>

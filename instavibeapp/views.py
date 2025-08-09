@@ -1,5 +1,5 @@
 import re
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render,reverse, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -11,7 +11,7 @@ from .models import Post, Like, Comment
 
 
 def home_view(request):
-    return render(request, 'instavibeapp/home.html')
+    return render(request, 'instavibeapp/home.html', {'repeat_list': range(10)})
 
 
 def login_view(request):
@@ -121,7 +121,12 @@ def test_view(request):
 @login_required
 def profile_view(request):
     profile = request.user.profile
-    return render(request, 'instavibeapp/profile.html', {'profile': profile})
+    posts = Post.objects.filter(owner=request.user).prefetch_related('likes', 'comments').order_by('-created_at')
+    return render(request, 'instavibeapp/profile.html', {
+        'profile': profile,
+        'posts': posts
+    })
+    
 
 
 @login_required
@@ -200,19 +205,46 @@ def like_post(request, post_id):
         Like.objects.create(user=request.user, post=post)
         is_liked = True
     
-    return redirect('instavibeapp:profile')
+    return JsonResponse({
+        'status': 'success',
+        'is_liked': is_liked,
+        'likes_count': post.likes_count
+    })
 
 @login_required
 def add_comment(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
     if request.method == "POST":
-        post_id = request.POST.get("post_id")
-        comment_text = request.POST.get("comment")
-        post = Post.objects.get(id=post_id)
-        Comment.objects.create(user=request.user, post=post, text=comment_text)
-    return redirect('instavibeapp:profile')
+        text = request.POST.get('text', '').strip()
+        if text:
+            Comment.objects.create(
+                user=request.user,
+                post=post,
+                text=text
+            )
+            messages.success(request, "Comment added successfully!")
+            # Redirect to profile with post ID in fragment identifier
+            return redirect(f'{reverse("instavibeapp:profile")}#post-{post_id}')
+        else:
+            messages.error(request, "Comment cannot be empty!")
+            
+    return redirect(f'{reverse("instavibeapp:profile")}#post-{post_id}')
+
+@login_required
+def view_comments(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.all().order_by('-created_at')
+    
+    return render(request, 'instavibeapp/comments.html', {
+        'post': post,
+        'comments': comments
+    })
 
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    post_id = comment.post.id
     comment.delete()
-    return redirect('instavibeapp:profile')
+    messages.success(request, "Comment deleted successfully!")
+    return redirect('instavibeapp:view_comments', post_id=post_id)

@@ -63,8 +63,10 @@ class Post(models.Model):
         # Delete image file when post is deleted
         self.image.delete(save=False)
         super().delete(*args, **kwargs)
-    
-        
+
+    def is_liked_by(self, user):
+        return self.likes.filter(user=user).exists()
+
     @property
     def likes_count(self):
         return self.likes.count()

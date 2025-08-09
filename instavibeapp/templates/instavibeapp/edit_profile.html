@@ -3,8 +3,8 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<div class="container mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl max-w-2xl">
-    <h2 class="text-3xl font-semibold text-center text-gray-800 mb-8">Edit Profile</h2>
+<div class="container text-black mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl max-w-2xl">
+    <h2 class="text-3xl text-black font-semibold text-center text-gray-800 mb-8">Edit Profile</h2>
 
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
         {% csrf_token %}
@@ -17,28 +17,30 @@
                      class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-md mb-4" width="150">
             {% endif %}
             <div class="relative inline-block w-full max-w-xs">
-                <label for="image" class="cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-lg 
-                                           hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Choose Image
+                
                 <input type="file" name="image" id="image" accept="image/*"
-                       class="hidden">
+                       class="ring-2 ring-blue-500 focus:ring-blue-500 focus:ring-opacity-50 
+                                  file:mr-4 file:py-2 file:px-4 file:border-0 
+                                  file:text-sm file:font-semibold file:bg-blue-100 
+                                  file:text-blue-700 hover:file:bg-blue-200 
+                                  rounded-lg cursor-pointer text-black">
             </div>
         </div>
 
 
         {# Bio Field - Fixed #}
-        <div class="form-group">
-            <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+        <div class="form-group text-black">
+            <label for="bio" class="block  text-sm font-medium text-gray-700 mb-2">Bio</label>
             <textarea name="bio" id="bio" rows="4"
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">{{ profile.bio }}</textarea>
         </div>
 
         {# Date of Birth Field - Fixed #}
-        <div class="form-group">
+        <div class="form-group text-black">
             <label for="date_of_birth" class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
             <input type="date" name="date_of_birth" id="date_of_birth"
                    value="{{ profile.date_of_birth|date:'Y-m-d' }}"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                   class="w-full px-4 py-2 bg-blue-200 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         {# Gender Field - Fixed #}
