@@ -8,6 +8,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import ProfileForm
 from .models import Post, Like, Comment, Follow
+from .utils import encode_id, decode_id
+
 
 
 def home_view(request):
@@ -173,10 +175,14 @@ def create_post(request):
     return render(request, 'instavibeapp/create_post.html')
 
 @login_required
-def edit_post(request, post_id):
+def edit_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id, owner=request.user)
     
     if request.method == 'POST':
+        image = request.FILES.get('image')
+        if image:
+            post.image = image
         caption = request.POST.get('caption', '')
         post.caption = caption
         post.save()
@@ -186,7 +192,8 @@ def edit_post(request, post_id):
     return render(request, 'instavibeapp/edit_post.html', {'post': post})
 
 @login_required
-def delete_post(request, post_id):
+def delete_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id, owner=request.user)
     
     if request.method == 'POST':
@@ -198,7 +205,8 @@ def delete_post(request, post_id):
 
 @login_required
 @require_POST
-def like_post(request, post_id):
+def like_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id)
     like = Like.objects.filter(user=request.user, post=post).first()
     
@@ -218,7 +226,8 @@ def like_post(request, post_id):
     })
 
 @login_required
-def add_comment(request, post_id):
+def add_comment(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id)
 
     if request.method == "POST":
@@ -238,7 +247,8 @@ def add_comment(request, post_id):
     return redirect(f'{reverse("instavibeapp:profile")}#post-{post_id}')
 
 @login_required
-def view_comments(request, post_id):
+def view_comments(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all().order_by('-created_at')
     
@@ -248,18 +258,19 @@ def view_comments(request, post_id):
     })
 
 @login_required
-def delete_comment(request, comment_id):
+def delete_comment(request, encoded_comment_id):
+    comment_id = decode_id(encoded_comment_id)
     comment = get_object_or_404(Comment, id=comment_id, user=request.user)
     post_id = comment.post.id
     comment.delete()
     messages.success(request, "Comment deleted successfully!")
-    return redirect('instavibeapp:view_comments', post_id=post_id)
+    return redirect('instavibeapp:view_comments', encoded_post_id=encode_id(post_id))
 
 # Add new views
-
 @login_required
 @require_POST
-def follow_unfollow(request, user_id):
+def follow_unfollow(request, encoded_user_id):
+    user_id = decode_id(encoded_user_id)
     user_to_follow = get_object_or_404(User, id=user_id)
     
     if user_to_follow == request.user:
@@ -287,7 +298,8 @@ def follow_unfollow(request, user_id):
     })
 
 @login_required
-def followers_list(request, user_id):
+def followers_list(request, encoded_user_id):
+    user_id = decode_id(encoded_user_id)
     user = get_object_or_404(User, id=user_id)
     followers = user.followers.all().select_related('follower__profile')
     
@@ -304,7 +316,8 @@ def followers_list(request, user_id):
     })
 
 @login_required
-def following_list(request, user_id):
+def following_list(request, encoded_user_id):
+    user_id = decode_id(encoded_user_id)
     user = get_object_or_404(User, id=user_id)
     following = user.following.all().select_related('following__profile')
     return render(request, 'instavibeapp/following_list.html', {

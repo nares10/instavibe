@@ -2,11 +2,14 @@
 {% block content %}
 {% load static %}
 {% load custom_filters %}
+{% load encode_filters %}
 <div class="bg-white container mx-auto px-4 py-8">
     {# Profile Header Section #}
     <div class="rounded-lg shadow-md p-6 mb-8">
-        <a href='{% url 'instavibeapp:home' %}' class="text-blue-600 hover:underline mb-4 inline-block">
-            <img src="{% static 'instavibeapp/images/black--back-button.png' %}" alt="Back Button" width="20" height="20" class="h-8 inline-block">
+        <a href='{% url 'instavibeapp:home' %}' 
+            class="text-black p-4 rounded-full mb-4 inline-block
+                   hover:scale-110 hover:shadow ">
+            <-- Back to Home
         </a>
         
         <div class="flex items-center gap-8">
@@ -31,7 +34,7 @@
                 </div>
                 
                 {# Add this in the profile info section #}
-                <div class="flex gap-6 mb-4">
+                <div class="flex gap-6 mt-4 mb-4 ">
                     <p
                        class="hover:underline text-center sh">
                         <div class="font-bold">{{ profile.followers_count }}</div>
@@ -85,7 +88,7 @@
                         {# Post Details #}
                         <div class="p-4">
                             {# Caption #}
-                            <p class="text-gray-800 mb-2">{{ post.caption|truncatechars:100 }}</p>
+                            <p class="text-gray-800 mb-2">{{ post.caption|truncatechars:50 }}</p>
                             
                             {# Post Meta #}
                             <div class="text-sm text-gray-500">
@@ -94,8 +97,8 @@
                             
                             {# Like Button #}
                             <div class="flex items-center gap-2 mt-4">
-                                <button class="like-button flex items-center gap-2" 
-                                        data-post-id="{{ post.id }}">
+                                <button class="like-button flex items-center gap-2"
+                                        data-like-url="{% url 'instavibeapp:like_post' post.id|encode_id_filter %}">
                                     <svg class="w-6 h-6 {% if user in post.likes.all %}text-red-500{% else %}text-gray-500{% endif %} 
                                               transition duration-200 hover:scale-110"
                                          fill="currentColor" viewBox="0 0 24 24">
@@ -104,17 +107,16 @@
                                     <span class="likes-count">{{ post.likes_count }}</span>
                                 </button>
                             </div>
-                            
                             {# Action Buttons #}
                             <div class="flex gap-2 mt-4">
-                                <a href="{% url 'instavibeapp:edit_post' post.id %}" 
+                                <a href="{% url 'instavibeapp:edit_post' post.id|encode_id_filter %}" 
                                    class="text-blue-600 hover:underline">Edit</a>
-                                <a href="{% url 'instavibeapp:delete_post' post.id %}" 
+                                <a href="{% url 'instavibeapp:delete_post' post.id|encode_id_filter %}" 
                                    class="text-red-600 hover:underline">Delete</a>
                             </div>
                             {# Comments Section #}
                             <div class="mt-4">
-                                <form method="POST" action="{% url 'instavibeapp:add_comment' post.id %}" class="flex gap-2">
+                                <form method="POST" action="{% url 'instavibeapp:add_comment' post.id|encode_id_filter %}" class="flex gap-2">
                                     {% csrf_token %}
                                     <input type="text" name="text" 
                                            placeholder="Add a comment..." 
@@ -133,7 +135,7 @@
                                                 <span class="font-medium">{{ comment.user.username }}:</span>
                                                 {{ comment.text }}
                                                 {% if user == comment.user %}
-                                                    <form method="POST" action="{% url 'instavibeapp:delete_comment' comment.id %}" 
+                                                    <form method="POST" action="{% url 'instavibeapp:delete_comment' comment.id|encode_id_filter %}" 
                                                           class="inline" onsubmit="return confirm('Delete this comment?')">
                                                         {% csrf_token %}
                                                         <button type="submit" class="text-red-600 text-sm ml-2">
@@ -143,7 +145,7 @@
                                                 {% endif %}
                                             </div>
                                             <div class="mt-2">
-                                                <a href="{% url 'instavibeapp:view_comments' post.id %}" 
+                                                <a href="{% url 'instavibeapp:view_comments' post.id|encode_id_filter %}" 
                                                    class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-block">
                                                     View All Comments ({{ post.comments.count }})
                                                 </a>
@@ -164,6 +166,74 @@
         {% endif %}
     </div>
 </div>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Like functionality
+            document.querySelectorAll('.like-button').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const url = this.dataset.likeUrl;
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrftoken,
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            // Update like button appearance
+                            const svg = this.querySelector('svg');
+                            svg.classList.toggle('text-red-500', data.is_liked);
+                            svg.classList.toggle('text-gray-500', !data.is_liked);
+                            
+                            // Update likes count
+                            const likesCount = this.parentElement.querySelector('.likes-count');
+                            likesCount.textContent = data.likes_count;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+            
+            // Follow button functionality
+            document.querySelectorAll('.follow-button').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const userId = this.dataset.userId;
+                    try {
+                        const response = await fetch(`/follow/${userId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            // Update button text and style
+                            this.textContent = data.is_following ? 'Unfollow' : 'Follow';
+                            this.classList.toggle('bg-gray-600', data.is_following);
+                            this.classList.toggle('bg-blue-600', !data.is_following);
+                            
+                            // Update follower/following counts if they exist
+                            const followerCount = document.querySelector('.follower-count');
+                            const followingCount = document.querySelector('.following-count');
+                            if (followerCount) followerCount.textContent = data.followers_count;
+                            if (followingCount) followingCount.textContent = data.following_count;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+        });
+    </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if there's a hash in the URL
