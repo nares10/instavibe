@@ -75,58 +75,38 @@
                 });
             });
             
-            // Add comment functionality
-            document.querySelectorAll('.add-comment-form').forEach(form => {
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const postId = this.dataset.postId;
-                    const input = this.querySelector('input');
-                    const text = input.value.trim();
-
-                    if (!text) return;
-                    
-                    const response = await fetch(`/post/${postId}/comment/`, {
-                        method: 'POST',
+            // Follow button functionality
+            document.querySelectorAll('.follow-button').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const userId = this.dataset.userId;
+                    try {
+                        const response = await fetch(`/follow/${userId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Content-Type': 'application/json',
+                            },
+                        });
                         
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        },
-                        body: `text=${text}`
-                    });
-                    
-                    const data = await response.json();
-                    console.log("Comment response:", data);  // ✅ Add this
-                    if (data.status === 'success') {
-                        console.log("Comment response:", data);
-                        const commentHtml = `
-                            <div class="comment" id="comment-${data.comment_id}">
-                                <span class="font-medium">${data.username}:</span>
-                                ${data.text}
-                                <button class="delete-comment text-red-600 text-sm ml-2" 
-                                        data-comment-id="${data.comment_id}">Delete</button>
-                            </div>
-                        `;
-                        this.closest('.post-card').querySelector('.comments-container').insertAdjacentHTML('afterbegin', commentHtml);
-                        input.value = '';
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            // Update button text and style
+                            this.textContent = data.is_following ? 'Unfollow' : 'Follow';
+                            this.classList.toggle('bg-gray-600', data.is_following);
+                            this.classList.toggle('bg-blue-600', !data.is_following);
+                            
+                            // Update follower/following counts if they exist
+                            const followerCount = document.querySelector('.follower-count');
+                            const followingCount = document.querySelector('.following-count');
+                            if (followerCount) followerCount.textContent = data.followers_count;
+                            if (followingCount) followingCount.textContent = data.following_count;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
                     }
                 });
-            });
-
-            // Delete comment functionality
-            document.addEventListener('click', async function(e) {
-                if (e.target.classList.contains('delete-comment')) {
-                    const commentId = e.target.dataset.commentId;
-                    const response = await fetch(`/comment/${commentId}/delete/`);
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        document.getElementById(`comment-${commentId}`).remove();
-                    }
-                }
             });
         });
     </script>
 </body>
 </html>
-    

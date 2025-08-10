@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import ProfileForm
-from .models import Post, Like, Comment
+from .models import Post, Like, Comment, Follow
 
 
 def home_view(request):
@@ -122,9 +122,15 @@ def test_view(request):
 def profile_view(request):
     profile = request.user.profile
     posts = Post.objects.filter(owner=request.user).prefetch_related('likes', 'comments').order_by('-created_at')
+    viewing_user = request.user
+    
+    # Get is_following status if viewing other's profile
+    is_following = profile.is_following(viewing_user) if viewing_user != profile.user else False
+    
     return render(request, 'instavibeapp/profile.html', {
         'profile': profile,
-        'posts': posts
+        'posts': posts,
+        'is_following': is_following
     })
     
 
@@ -248,3 +254,60 @@ def delete_comment(request, comment_id):
     comment.delete()
     messages.success(request, "Comment deleted successfully!")
     return redirect('instavibeapp:view_comments', post_id=post_id)
+
+# Add new views
+
+@login_required
+@require_POST
+def follow_unfollow(request, user_id):
+    user_to_follow = get_object_or_404(User, id=user_id)
+    
+    if user_to_follow == request.user:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'You cannot follow yourself'
+        })
+    
+    follow, created = Follow.objects.get_or_create(
+        follower=request.user,
+        following=user_to_follow
+    )
+    
+    if not created:
+        follow.delete()
+        is_following = False
+    else:
+        is_following = True
+    
+    return JsonResponse({
+        'status': 'success',
+        'is_following': is_following,
+        'followers_count': user_to_follow.profile.followers_count(),
+        'following_count': user_to_follow.profile.following_count()
+    })
+
+@login_required
+def followers_list(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    followers = user.followers.all().select_related('follower__profile')
+    
+    # Create a dictionary of following status for each follower
+    following_status = {
+        follow.follower.id: request.user.profile.is_following(follow.follower)
+        for follow in followers
+    }
+    
+    return render(request, 'instavibeapp/followers_list.html', {
+        'user_profile': user.profile,
+        'followers': followers,
+        'following_status': following_status
+    })
+
+@login_required
+def following_list(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    following = user.following.all().select_related('following__profile')
+    return render(request, 'instavibeapp/following_list.html', {
+        'user_profile': user.profile,
+        'following': following
+    })

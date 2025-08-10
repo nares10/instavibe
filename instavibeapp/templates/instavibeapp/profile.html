@@ -1,6 +1,7 @@
 {% extends 'instavibeapp/base.html' %}
 {% block content %}
 {% load static %}
+{% load custom_filters %}
 <div class="bg-white container mx-auto px-4 py-8">
     {# Profile Header Section #}
     <div class="rounded-lg shadow-md p-6 mb-8">
@@ -28,6 +29,27 @@
                     <p><strong>Date of Birth:</strong> {% if profile.date_of_birth %}{{ profile.date_of_birth }}{% else %}Not specified{% endif %}</p>
                     <p><strong>Gender:</strong> {% if profile.gender %}{{ profile.gender }}{% else %}Not specified{% endif %}</p>
                 </div>
+                
+                {# Add this in the profile info section #}
+                <div class="flex gap-6 mb-4">
+                    <p
+                       class="hover:underline text-center sh">
+                        <div class="font-bold">{{ profile.followers_count }}</div>
+                        <div class="text-gray-600">followers</div>
+                    </p>
+                    <p
+                       class="hover:underline text-center">
+                        <div class="font-bold">{{ profile.following_count }}</div>
+                        <div class="text-gray-600">following</div>
+                    </p>
+                </div>
+
+                {% if user != profile.user %}
+                    <button class="follow-button px-4 py-2 rounded-lg {% if is_following %}bg-gray-600{% else %}bg-blue-600{% endif %} text-white"
+                            data-user-id="{{ profile.user.id }}">
+                        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                    </button>
+                {% endif %}
             </div>
         </div>
                     
