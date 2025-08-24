@@ -21,7 +21,7 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             login(request, user)
             return redirect('instavibeapp:home')  
@@ -121,9 +121,10 @@ def test_view(request):
     return render(request, 'instavibeapp/test.html')
 
 @login_required
-def profile_view(request):
-    profile = request.user.profile
-    posts = Post.objects.filter(owner=request.user).prefetch_related('likes', 'comments').order_by('-created_at')
+def profile_view(request, username):
+    user_obj = get_object_or_404(User, username=username)
+    profile=user_obj.profile
+    posts = Post.objects.filter(owner=user_obj).prefetch_related('likes', 'comments').order_by('-created_at')
     viewing_user = request.user
     
     # Get is_following status if viewing other's profile
@@ -152,7 +153,7 @@ def edit_profile_view(request):
         profile.date_of_birth = date_of_birth if date_of_birth else None
         profile.gender = gender
         profile.save()
-        return redirect('instavibeapp:profile')
+        return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
     return render(request, 'instavibeapp/edit_profile.html', {'profile': profile})
 
 @login_required
@@ -168,7 +169,7 @@ def create_post(request):
                 caption=caption
             )
             messages.success(request, "Post created successfully!")
-            return redirect('instavibeapp:profile')
+            return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
         else:
             messages.error(request, "Image is required!")
     
@@ -187,7 +188,7 @@ def edit_post(request, encoded_post_id):
         post.caption = caption
         post.save()
         messages.success(request, "Post updated successfully!")
-        return redirect('instavibeapp:profile')
+        return redirect('instavibeapp:profile', request.user.username)
     
     return render(request, 'instavibeapp/edit_post.html', {'post': post})
 
@@ -199,7 +200,7 @@ def delete_post(request, encoded_post_id):
     if request.method == 'POST':
         post.delete()
         messages.success(request, "Post deleted successfully!")
-        return redirect('instavibeapp:profile')
+        return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
     
     return render(request, 'instavibeapp/delete_post.html', {'post': post})
 
@@ -225,26 +226,27 @@ def like_post(request, encoded_post_id):
         'likes_count': post.likes_count
     })
 
+# instavibeapp/views.py
+
 @login_required
 def add_comment(request, encoded_post_id):
     post_id = decode_id(encoded_post_id)
     post = get_object_or_404(Post, id=post_id)
 
-    if request.method == "POST":
-        text = request.POST.get('text', '').strip()
+    if request.method == 'POST':
+        text = request.POST.get('text')
         if text:
             Comment.objects.create(
                 user=request.user,
                 post=post,
                 text=text
             )
-            messages.success(request, "Comment added successfully!")
-            # Redirect to profile with post ID in fragment identifier
-            return redirect(f'{reverse("instavibeapp:profile")}#post-{post_id}')
-        else:
-            messages.error(request, "Comment cannot be empty!")
-            
-    return redirect(f'{reverse("instavibeapp:profile")}#post-{post_id}')
+            # Corrected line to reverse the URL with the correct username
+            return redirect(f'{reverse("instavibeapp:view_comments", kwargs={"encoded_post_id": encoded_post_id})}#comment-form')
+
+    # This is an alternative redirect if you want to go back to the post's page
+    # It seems your intent is to redirect to the profile page of the post owner
+    return redirect(f'{reverse("instavibeapp:profile", kwargs={"username": post.owner.username})}#post-{post_id}')
 
 @login_required
 def view_comments(request, encoded_post_id):
@@ -254,7 +256,7 @@ def view_comments(request, encoded_post_id):
     
     return render(request, 'instavibeapp/comments.html', {
         'post': post,
-        'comments': comments
+        'comments': comments,
     })
 
 @login_required

@@ -1,14 +1,18 @@
 {% extends 'instavibeapp/base.html' %}
+{% load static %}
+{% load tailwind_tags %}
+{% tailwind_css %}
+{% load encode_filters %}
+{% load custom_filters %}
 
 {% block content %}
-{% load static %}
 <div class="container mx-auto px-4 py-8 max-w-2xl">
     <div class="bg-white rounded-lg shadow-md">
 
         {# Post Header #}
         <div class="p-4 border-b">
             <div class="flex items-center justify-between mb-4">
-                <a href="{% url 'instavibeapp:profile' %}">
+                <a href="{% url 'instavibeapp:profile' post.owner.username%}">
                    <img class="logo" alt="App logo" src="{% static 'instavibeapp/images/black--back-button.png' %}" width="20" height="20">
                 </a>
                 <h2 class="text-xl font-semibold">Comments</h2>
@@ -24,7 +28,7 @@
 
         {# Add Comment Form #}
         <div class="p-4 border-b">
-            <form method="POST" action="{% url 'instavibeapp:add_comment' post.id %}" class="flex gap-2">
+            <form method="POST" action="{% url 'instavibeapp:add_comment' post.id|encode_id_filter %}" class="flex gap-2">
                 {% csrf_token %}
                 <input type="text" name="text"
                        placeholder="Add a comment..."
@@ -38,6 +42,7 @@
                 </button>
             </form>
         </div>
+
 
         {# Comments List #}
         <div class="divide-y my-4">
@@ -57,7 +62,7 @@
                         {# Delete Button + Timestamp #}
                         <div class="flex items-center gap-4">
                             {% if user == comment.user %}
-                                <form method="POST" action="{% url 'instavibeapp:delete_comment' comment.id %}"
+                                <form method="POST" action="{% url 'instavibeapp:delete_comment' comment.id|encode_id_filter %}"
                                       onsubmit="return confirm('Are you sure you want to delete this comment?')">
                                     {% csrf_token %}
                                     <button type="submit" 

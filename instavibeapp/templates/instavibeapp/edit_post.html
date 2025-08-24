@@ -33,7 +33,7 @@ stavibeapp\templates\instavibeapp\edit_post.html
         </div>
 
         <div class="flex justify-end gap-4">
-            <a href="{% url 'instavibeapp:profile' %}" 
+            <a href="{% url 'instavibeapp:profile' username=request.user.username%}" 
                class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 
                       transition duration-200">
                 Cancel

@@ -36,9 +36,11 @@
             <a href="{% url 'instavibeapp:home' %}">
                 <img src="{% static 'instavibeapp/images/home-dark-icon.svg' %}" alt="Home Icon" class="w-6 h-6 mb-1" />
             </a>
-            <a href="{% url 'instavibeapp:profile' %}">
-                <img src="{% static 'instavibeapp/images/dark-profile-round-.svg' %}" alt="Profile Icon" class="w-6 h-6 mb-1" />
-            </a>
+            {% if user.is_authenticated %}brower
+                <a href="{% url 'instavibeapp:profile' username=request.user.username %}">
+                    <img src="{% static 'instavibeapp/images/dark-profile-round-.svg' %}" alt="Profile Icon" class="w-6 h-6 mb-1" />
+                </a>
+            {% endif %}    
         </div>
     </div>
 </div>

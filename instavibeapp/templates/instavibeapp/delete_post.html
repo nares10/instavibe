@@ -11,7 +11,7 @@
 
     <form method="POST" class="flex justify-center gap-4">
         {% csrf_token %}
-        <a href="{% url 'instavibeapp:profile' %}" 
+        <a href="{% url 'instavibeapp:profile' username=request.user.username%}" 
            class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 
                   transition duration-200">
             Cancel
