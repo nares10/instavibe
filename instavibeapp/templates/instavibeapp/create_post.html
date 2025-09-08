@@ -48,6 +48,11 @@
 </div>
 
 <script>
+    preview_tag =  document.getElementById('imagePreview')
+    if (! document.getElementById('image').value) {
+        preview_tag.classList.add('hidden');
+    }
+    
     document.getElementById('image').addEventListener('change', function(e) {
         const preview = document.getElementById('imagePreview');
         const file = e.target.files[0];

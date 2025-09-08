@@ -6,6 +6,7 @@ __pycache__/
 *.env
 .env.*
 db.sqlite3
+.env
 
 # Django
 /staticfiles/
@@ -36,4 +37,4 @@ theme/__pycache__/
 # Misc
 STEPS.md
 ui*
-*.json
+secret-google-oath.json.env

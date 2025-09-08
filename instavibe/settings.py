@@ -31,10 +31,7 @@ SECRET_KEY = 'django-insecure-+xe@5--iaz!s2_yr2(cpsj)10gyednr%r!#ux6u4bpu5ito0*i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [    'localhost',
-    '127.0.0.1',
-]
-
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -47,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'instavibeapp',
     'tailwind',
-    'theme',
+    'mytheme',
      # ...existing apps...
     'django.contrib.sites',
     'allauth',
@@ -111,13 +108,13 @@ MESSAGE_TAGS = {
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DATABASE_NAME", "postgres"),
+        "USER": os.getenv("DATABASE_USER", "postgres"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", "postgres"),
+        "HOST": os.getenv("DATABASE_HOST", "db"),  # name of service in docker-compose
+        "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
 }
 
@@ -170,28 +167,34 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SITE_ID = 2
+
 
 LOGIN_URL = 'instavibeapp:login'
 LOGIN_REDIRECT_URL = 'instavibeapp:home'
 LOGOUT_REDIRECT_URL = 'instavibeapp:home'
 
-TAILWIND_APP_NAME = 'theme'
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+SITE_ID = 1
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-            'prompt': 'select_account',
+        'APP': {
+            'client_id': os.getenv('GOOGLE_OAUTH_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_OAUTH_CLIENT_SECRET'),
+            'key': '' # Not typically used for Google
         },
-        'OAUTH_PKCE_ENABLED': True,
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline',
+        }
     }
 }
 
@@ -201,3 +204,6 @@ ACCOUNT_LOGIN_ON_GET = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+TAILWIND_APP_NAME='mytheme'
+NPM_BIN_PATH='usr/bin/npm'

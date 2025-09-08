@@ -153,7 +153,7 @@ def edit_profile_view(request):
         profile.date_of_birth = date_of_birth if date_of_birth else None
         profile.gender = gender
         profile.save()
-        return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
+        return redirect(reverse('instavibeapp:profile', kwargs={'username': request.user.username}))
     return render(request, 'instavibeapp/edit_profile.html', {'profile': profile})
 
 @login_required
@@ -169,7 +169,7 @@ def create_post(request):
                 caption=caption
             )
             messages.success(request, "Post created successfully!")
-            return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
+            return redirect(reverse('instavibeapp:profile', kwargs={'username': request.user.username}))
         else:
             messages.error(request, "Image is required!")
     
@@ -188,7 +188,7 @@ def edit_post(request, encoded_post_id):
         post.caption = caption
         post.save()
         messages.success(request, "Post updated successfully!")
-        return redirect('instavibeapp:profile', request.user.username)
+        return redirect(reverse('instavibeapp:profile', kwargs={'username': request.user.username}))
     
     return render(request, 'instavibeapp/edit_post.html', {'post': post})
 
@@ -200,7 +200,7 @@ def delete_post(request, encoded_post_id):
     if request.method == 'POST':
         post.delete()
         messages.success(request, "Post deleted successfully!")
-        return redirect('instavibeapp:profile', kwargs={'username': request.user.username})
+        return redirect(reverse('instavibeapp:profile', kwargs={'username': request.user.username}))
     
     return render(request, 'instavibeapp/delete_post.html', {'post': post})
 
