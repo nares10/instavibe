@@ -1,0 +1,28 @@
+{% extends 'instavibeapp/base.html' %}
+{% block title %}Following{% endblock %}
+
+{% block content %}
+<div>
+    <h2>{{user_profile.user.username}}'s Following List</h2>
+    <div class="followers" >
+        {% for user- in followers: %}
+                <div class="follower" >
+                    <div>
+                        <img src="{{ follow.follower.profile.profile_picture.url }}" alt="{{ follow.follower.username }}'s profile picture" class="w-12 h-12 rounded-full object-cover">
+                        <span class="text-gray-800 font-medium">{{ follow.follower.username }}</span>
+                        <button> follow</button>
+                    </div>
+
+                    {% if request.user != follow.follower %}
+                    {% if following_status.follow.follower.id %}
+                        <form action="{% url 'follow_unfollow' encoded_user_id=follow.follower.profile.encoded_id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-gray-200 text-gray-800 px-4 py-1 rounded-full hover:bg-gray-300 transition">Unfollow</button>
+                        </form>
+                    {% endif %}
+
+                {% endif %}
+                </div>
+    </div>
+</div>
+{% endblock %}

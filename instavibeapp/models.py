@@ -5,7 +5,7 @@ from django.dispatch import receiver
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profile_images/', default='default.jpeg')
+    image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg')
     bio = models.TextField(blank=True, max_length=500)
     # --- New Fields ---
     date_of_birth = models.DateField(null=True, blank=True)
@@ -30,9 +30,11 @@ class Profile(models.Model):
     def following_count(self):
         return self.user.following.count()
     
-    def is_following(self, user):
+    def is_following_to(self, user):
         return Follow.objects.filter(follower=self.user, following=user).exists()
     
+    def is_follower_of(self, user):
+        return Follow.objects.filter(follower=user, following=self.user).exists()
 
 
 # Signals to create/save Profile for every new User

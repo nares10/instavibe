@@ -36,5 +36,6 @@ theme/__pycache__/
 
 # Misc
 STEPS.md
-ui*
+ui screenshots
+Procfile.tailwind
 secret-google-oath.json.env

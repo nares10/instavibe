@@ -7,6 +7,7 @@
     {% load static %}
     {% load encode_filters %}
     {% load custom_filters %}
+    <script src="{% static 'instavibeapp/htmx.min.js' %}" ></script>
 </head>
 <body class="flex flex-col bg-white">
 <div>    
@@ -26,8 +27,25 @@
     </div>
 
     <!-- Main content -->
-    <main class="flex-1 w-full bg-white mt-5">
-        {% block content %}{% endblock %}
+    <main class="flex-1 w-full bg-white mt-20 pt-20">
+        {% block content %} Hello
+        Hell
+        oHel
+        loHelloHelloHe
+        
+        lloHelloHelloHe
+        lloHelloHelloHelloHell
+        lloHelloHelloHelloHel
+        
+        
+        loHelloHelloHelloH
+        elloHelloHelloHello
+        HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHe
+        lloHelloHelloHelloHelloHelloHelloHelloHelloHel
+        loHelloHelloHelloHelloHel
+        loHelloHelloHelloHelloHell
+        o
+        {% endblock %}
     </main>
 
     <!-- Fixed Footer -->
@@ -36,7 +54,7 @@
             <a href="{% url 'instavibeapp:home' %}">
                 <img src="{% static 'instavibeapp/images/home-dark-icon.svg' %}" alt="Home Icon" class="w-6 h-6 mb-1" />
             </a>
-            {% if user.is_authenticated %}brower
+            {% if user.is_authenticated %}
                 <a href="{% url 'instavibeapp:profile' username=request.user.username %}">
                     <img src="{% static 'instavibeapp/images/dark-profile-round-.svg' %}" alt="Profile Icon" class="w-6 h-6 mb-1" />
                 </a>

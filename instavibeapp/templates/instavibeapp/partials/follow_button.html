@@ -1,0 +1,16 @@
+<div id="follow-button-container">
+    <form hx-post="{% url 'instavibeapp:follow_unfollow' profile.user.username %}"
+          hx-target="#follow-button-container"
+          hx-swap="outerHTML">
+        {% csrf_token %}
+        <button type="submit"
+                class="follow-button px-4 py-2 rounded-lg 
+                       {% if is_following_to %}bg-gray-600{% else %}bg-blue-600{% endif %} text-white">
+            {% if is_following_to %}
+            Unfollow
+            {% else %}
+            Follow
+            {% endif %}
+        </button>
+    </form>
+</div>
