@@ -14,20 +14,18 @@
                     </div>
 
                     {% if request.user != follow.follower %}
-                    {% if following_status.follow.follower.id %}
-                        <form action="{% url 'unfollow_user' encoded_user_id=follow.follower.profile.encoded_id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="bg-gray-200 text-gray-800 px-4 py-1 rounded-full hover:bg-gray-300 transition">Unfollow</button>
-                        </form>
-
-                    {% else %}
-                        <form action="{% url 'follow_user' encoded_user_id=follow.follower.profile.encoded_id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded-full hover:bg-blue-600 transition">Follow</button>
+                    
+                        <form action="{% url 'instavibeapp:follow_unfollow' follow.follower.username %}" method="POST">
+                            {% csrf_token %} 
+                            <button type="submit" class="bg-gray-200 text-gray-800 px-4 py-1 rounded-full hover:bg-gray-300 transition">
+                                {% if follow.follower.id in following_ids %}
+                                    Unfollow
+                                {% else %}
+                                    Follow
+                                {% endif %}
+                            </button>
                         </form>
                     {% endif %}
-
-                {% endif %}
                 </div>
         {% empty %}
             <p class="text-black">No followers yet.</p>

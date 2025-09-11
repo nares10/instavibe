@@ -5,7 +5,7 @@ from django.dispatch import receiver
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg')
+    image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpeg')
     bio = models.TextField(blank=True, max_length=500)
     # --- New Fields ---
     date_of_birth = models.DateField(null=True, blank=True)
@@ -45,6 +45,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
+    instance.profile.image = 'profile_images/default.jpeg'
     instance.profile.save()
 
 class Post(models.Model):

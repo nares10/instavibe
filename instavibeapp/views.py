@@ -298,10 +298,17 @@ def follow_unfollow(request, username):
 def followers_list(request, username):
     user = get_object_or_404(User, username=username)
     followers = user.followers.all().select_related('follower__profile')
+
+    following_ids = set(
+        Follow.objects.filter(follower=request.user)
+        .values_list('following_id', flat=True)
+    )
+
     
     return render(request, 'instavibeapp/followers_list.html', {
         'user_profile': user.profile,
         'followers': followers,
+        'following_ids': following_ids,
     })
 
 @login_required

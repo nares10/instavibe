@@ -2,7 +2,7 @@ services:
   web:
     build: .
     container_name: django_app
-    command: /app/wait-for-it.sh db:5432 -- python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
