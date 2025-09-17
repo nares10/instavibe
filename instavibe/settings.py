@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-import os
+import os, sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
@@ -31,7 +31,9 @@ SECRET_KEY = 'django-insecure-+xe@5--iaz!s2_yr2(cpsj)10gyednr%r!#ux6u4bpu5ito0*i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '0.0.0.0'
+]
 
 # Application definition
 
@@ -43,16 +45,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'instavibeapp',
+    #...for-tailwind...
     'tailwind',
     'mytheme',
-     # ...existing apps...
+     # ...for google oauth apps...
     'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    # ...other useful apps...
     'django_extensions',
     'widget_tweaks',
+    #...for real time communication
+    'channels',
 ]
 
 
@@ -179,7 +185,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-SITE_ID = 1
+SITE_ID = 2
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -207,3 +213,29 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 TAILWIND_APP_NAME='mytheme'
 NPM_BIN_PATH='usr/bin/npm'
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+]
+
+TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
+
+if not TESTING:
+    INSTALLED_APPS = [
+        *INSTALLED_APPS,
+        "debug_toolbar",
+    ]
+    MIDDLEWARE = [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        *MIDDLEWARE,
+    ]
+
+ASGI_APPLICATION = 'instavibe.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    },
+}

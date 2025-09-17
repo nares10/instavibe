@@ -10,14 +10,13 @@
         <a href='{% url 'instavibeapp:home' %}' 
             class="text-black p-4 rounded-full mb-4 inline-block
                    hover:scale-110 hover:shadow ">
-            <-- Back to Home
+            <--- Back to Home
         </a>
         
         <div class="flex items-center gap-8">
             {# Profile Image #}
             <div class="flex-shrink-0">
-                <img src="{% if user.profile.image %} {{ user.profile.image.url }} {% else %} {% static 'images/default.jpg' %}{% endif %}"
-                     alt="{{ user.username }}'s profile picture"
+                <img src="{% if user.profile.image %}{{ user.profile.image.url }}{% else %}/media/profile_images/defualt.jpeg{% endif %}" alt="Profile Image"
                      class="rounded-full w-20 h-20">
             </div>
             
@@ -48,7 +47,7 @@
                     </a>
                 </div>
 
-                {% if user != profile.user %}
+                {% if user != profile.user and profile.user != viewing_user %}
                 
                     <div id="follow-button-container">
                         {% include "instavibeapp/partials/follow_button.html" %}

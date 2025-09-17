@@ -126,14 +126,15 @@ def profile_view(request, username):
     profile=user_obj.profile
     posts = Post.objects.filter(owner=user_obj).prefetch_related('likes', 'comments').order_by('-created_at')
     viewing_user = request.user
+
     
-    # Get is_following_to status if viewing other's profile
-    is_following_to = profile.is_following_to(viewing_user) if viewing_user != profile.user else False
+    following_status = viewing_user.profile.is_following_to(user_obj) if viewing_user != profile.user else False
     
     return render(request, 'instavibeapp/profile.html', {
+        'viewing_user': viewing_user,
         'profile': profile,
         'posts': posts,
-        'is_following_to': is_following_to
+        'following_status': following_status
     })
     
 
@@ -280,7 +281,7 @@ def follow_unfollow(request, username):
         following=user_to_follow
     )
 
-    if not created:
+    if not created: # Already following, so unfollow
         follow.delete()
         is_following_to = False
     else:

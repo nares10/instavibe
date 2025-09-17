@@ -8,9 +8,8 @@
         {% for follow in followers %}
                 <div class="follower" >
                     <div>
-                        <img src="{{ follow.follower.profile.profile_picture.url }}" alt="{{ follow.follower.username }}'s profile picture" class="w-12 h-12 rounded-full object-cover">
-                        <span class="text-gray-800 font-medium">{{ follow.follower.username }}</span>
-                        <button> follow</button>
+                        <!-- <img src="{{ follow.follower.profile.profile_picture.url }}" alt="{{ follow.follower.username }}'s profile picture" class="w-12 h-12 rounded-full object-cover"> -->
+                        <a href="{% url 'instavibeapp:profile' follow.follower.username %}"><span class="text-gray-800 font-medium">{{ follow.follower.username }}</span></a>
                     </div>
 
                     {% if request.user != follow.follower %}
