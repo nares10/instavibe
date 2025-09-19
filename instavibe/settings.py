@@ -32,12 +32,18 @@ SECRET_KEY = 'django-insecure-+xe@5--iaz!s2_yr2(cpsj)10gyednr%r!#ux6u4bpu5ito0*i
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '0.0.0.0'
+    '0.0.0.0',
+    'localhost',
+    '127.0.0.1',
 ]
 
 # Application definition
 
 INSTALLED_APPS = [
+    #...for real time communication
+    'channels',
+    'daphne',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,8 +63,7 @@ INSTALLED_APPS = [
     # ...other useful apps...
     'django_extensions',
     'widget_tweaks',
-    #...for real time communication
-    'channels',
+    
 ]
 
 
@@ -236,6 +241,6 @@ ASGI_APPLICATION = 'instavibe.asgi.application'
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+        "CONFIG": {"hosts": [("redis", 6379)]},
     },
 }

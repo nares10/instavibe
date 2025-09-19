@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import ProfileForm
-from .models import Post, Like, Comment, Follow
+from .models import Post, Like, Comment, Follow, Notification
 from .utils import encode_id, decode_id
 
 
@@ -321,4 +321,11 @@ def following_list(request, username):
     return render(request, 'instavibeapp/following_list.html', {
         'user_profile': user.profile,
         'following': following
+    })
+
+@login_required
+def notifications_view(request):
+    notifications = Notification.objects.filter(receiver=request.user).order_by('-created_at')
+    return render(request, 'instavibeapp/notifications.html', {
+        'notifications': notifications
     })

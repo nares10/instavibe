@@ -9,6 +9,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('test/', views.test_view, name='test'),
 
+    # Notifications
+    path('notifications/', views.notifications_view, name='notifications'),
+    
     # Profile-related
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('<str:username>/following-list/', views.following_list, name='following_list'),
@@ -28,4 +31,8 @@ urlpatterns = [
 
     # Follow system
     path('follow/<str:username>/', views.follow_unfollow, name='follow_unfollow'),
+    
+    
+
+
 ]

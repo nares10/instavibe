@@ -24,7 +24,6 @@ application = ProtocolTypeRouter({
     "websocket": AuthMiddlewareStack(
         URLRouter(
             instavibeapp.routing.websocket_urlpatterns
-            # You will add websocket urls here soon
         )
     ),
 })

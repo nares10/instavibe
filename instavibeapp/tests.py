@@ -2,14 +2,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.utils import timezone
 from .models import Post, Like, Comment, Follow, Notification
 from .utils import encode_id 
 from channels.testing import WebsocketCommunicator
 from instavibe.asgi import application
 
 
-class ViewsTestCase(TestCase):
+# ---------------- Base setup mixin ----------------
+class BaseSetupMixin:
     def setUp(self):
         self.client = Client()
         self.username = "testuser"
@@ -18,11 +18,9 @@ class ViewsTestCase(TestCase):
         image = SimpleUploadedFile(name='test_image.jpg', content=b'', content_type='image/jpeg')
         self.post = Post.objects.create(owner=self.user, caption="Test post", image=image)
 
-    def test_home_view(self):
-        response = self.client.get(reverse('instavibeapp:home'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'instavibeapp/home.html')
 
+# ---------------- Auth related views ----------------
+class AuthViewsTestCase(BaseSetupMixin, TestCase):
     def test_login_view_post_success(self):
         response = self.client.post(reverse('instavibeapp:login'),{
             'username': self.username,
@@ -30,13 +28,6 @@ class ViewsTestCase(TestCase):
         })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('instavibeapp:home'))
-
-    def test_login_view_post(self):
-        response = self.client.post(reverse('instavibeapp:login'), {
-            'username': self.username,
-            'password': self.password
-        })
-        self.assertEqual(response.status_code, 302)  # Redirect on success
 
     def test_register_view_get(self):
         response = self.client.get(reverse('instavibeapp:register'))
@@ -46,7 +37,15 @@ class ViewsTestCase(TestCase):
     def test_logout_view(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('instavibeapp:logout'))
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 302)
+
+
+# ---------------- Profile related views ----------------
+class ProfileViewsTestCase(BaseSetupMixin, TestCase):
+    def test_home_view(self):
+        response = self.client.get(reverse('instavibeapp:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'instavibeapp/home.html')
 
     def test_profile_view(self):
         self.client.login(username=self.username, password=self.password)
@@ -60,6 +59,9 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'instavibeapp/edit_profile.html')
 
+
+# ---------------- Post related views ----------------
+class PostViewsTestCase(BaseSetupMixin, TestCase):
     def test_create_post_view(self):
         self.client.login(username=self.username, password=self.password)
         response = self.client.get(reverse('instavibeapp:create_post'))
@@ -80,6 +82,9 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'instavibeapp/delete_post.html')
 
+
+# ---------------- Comment related views ----------------
+class CommentViewsTestCase(BaseSetupMixin, TestCase):
     def test_view_comments(self):
         self.client.login(username=self.username, password=self.password)
         encoded_post_id = encode_id(self.post.id)
@@ -93,7 +98,7 @@ class ViewsTestCase(TestCase):
         response = self.client.post(reverse('instavibeapp:add_comment', args=[encoded_post_id]), {
             'text': 'This is a test comment'
         })
-        self.assertEqual(response.status_code, 302)  # Redirect after adding comment
+        self.assertEqual(response.status_code, 302)
         self.assertTrue(self.post.comments.filter(text='This is a test comment').exists())
 
     def test_delete_comment_view(self):
@@ -104,6 +109,8 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.filter(id=comment.id).exists())
 
+
+# ---------------- Notification tests ----------------
 class NotificationTests(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username='user1', password='pass')
@@ -112,7 +119,6 @@ class NotificationTests(TestCase):
 
     def test_like_generates_notification(self):
         Like.objects.create(user=self.user2, post=self.post)
-
         notif = Notification.objects.filter(receiver=self.user1, type='like').first()
         self.assertIsNotNone(notif)
         self.assertEqual(notif.sender, self.user2)
@@ -120,7 +126,6 @@ class NotificationTests(TestCase):
 
     def test_comment_generates_notification(self):
         Comment.objects.create(user=self.user2, post=self.post, text="Nice post!")
-
         notif = Notification.objects.filter(receiver=self.user1, type='comment').first()
         self.assertIsNotNone(notif)
         self.assertEqual(notif.sender, self.user2)
@@ -128,7 +133,6 @@ class NotificationTests(TestCase):
 
     def test_follow_generates_notification(self):
         Follow.objects.create(follower=self.user2, following=self.user1)
-
         notif = Notification.objects.filter(receiver=self.user1, type='follow').first()
         self.assertIsNotNone(notif)
         self.assertEqual(notif.sender, self.user2)
@@ -137,29 +141,20 @@ class NotificationTests(TestCase):
         Like.objects.create(user=self.user2, post=self.post)
         Comment.objects.create(user=self.user2, post=self.post, text="Hi")
         Follow.objects.create(follower=self.user2, following=self.user1)
-
-        notif_times = list(Notification.objects.filter(receiver=self.user1)
+        notif_types = list(Notification.objects.filter(receiver=self.user1)
                            .order_by('created_at')
                            .values_list('type', flat=True))
-        self.assertEqual(notif_times, sorted(notif_times, key=lambda n: n))
+        self.assertEqual(notif_types, ['like', 'comment', 'follow'])
 
     async def test_websocket_receives_pending_notifications(self):
-        # Simulate offline user receiving events
         Like.objects.create(user=self.user2, post=self.post)
         Comment.objects.create(user=self.user2, post=self.post, text="Hi")
-
-        # Simulate user connecting via WebSocket
         communicator = WebsocketCommunicator(application, f"/ws/notifications/{self.user1.id}/")
         connected, _ = await communicator.connect()
         self.assertTrue(connected)
-
-        # Should receive the stored notifications
         received1 = await communicator.receive_json_from()
         received2 = await communicator.receive_json_from()
-
         types = {received1["type"], received2["type"]}
         self.assertIn("like", types)
         self.assertIn("comment", types)
-
         await communicator.disconnect()
- 
