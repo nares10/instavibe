@@ -1,0 +1,55 @@
+{% load tailwind_tags %} {% tailwind_css %} {% load static %} 
+{% load encode_filters %} 
+{% if posts %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for post in page_obj %}
+
+  <div
+    id="post-{{ post.id }}"
+    class="post-card bg-gray-50 rounded-lg overflow-hidden shadow-md transition duration-300"
+  >
+    {# Post Image #}
+    <img
+      src="{{ post.image.url }}"
+      alt="Post Image"
+      class="w-[150px] h-[150px] object-cover rounded-t-lg"
+    />
+
+    {# Post Details #}
+    <div class="p-4">
+      {# Caption #}
+      <p class="text-gray-800 mb-2">{{ post.caption|truncatechars:50 }}</p>
+
+      {# Post Meta #}
+      <div class="text-sm text-gray-500">
+        Posted on {{ post.created_at|date:"M d, Y" }}
+      </div>
+
+      {# Like Button #} {% include "instavibeapp/partials/like_button.html" %}
+      {# Action Buttons #}
+      <div class="flex gap-2 mt-4">
+        <a
+          href="#"
+          class="text-blue-600 hover:underline"
+          >Edit</a
+        >
+        <a
+          href="#"
+          class="text-red-600 hover:underline"
+          >Delete</a
+        >
+      </div>
+    </div>
+    {# Comment Button #}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-gray-500 text-center py-8">No posts yet.</p>
+{% endif %} {% if page_obj.has_next %}
+<div
+  hx-get="{% url 'instavibeapp:feed' %}?page={{ page_obj.next_page_number }}"
+  hx-trigger="revealed"
+  hx-swap="afterend"
+></div>
+{% endif %}

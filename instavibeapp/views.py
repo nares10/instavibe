@@ -7,13 +7,35 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import ProfileForm
-from .models import Post, Like, Comment, Follow, Notification
+from .models import Profile, Post, Like, Comment, Follow, Notification
 from .utils import encode_id, decode_id
+from django.utils.timezone import localtime
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.urls import path
+from django.db.models import Count, Exists, OuterRef, Q
+from django.template.loader import render_to_string
 
+import logging
 
+logger = logging.getLogger(__name__)
 
 def home_view(request):
-    return render(request, 'instavibeapp/home.html', {'repeat_list': range(10)})
+    return render(request, "instavibeapp/home.html")
+
+
+@login_required
+def feed_view(request):
+    page_number = request.GET.get("page", 1)
+    posts = Post.objects.all().order_by("-created_at")
+
+    paginator = Paginator(posts, 15)  # 15 posts per page
+    page_obj = paginator.get_page(page_number)
+
+    if request.htmx:  # HTMX request -> return only posts HTML
+        return render(request, "instavibeapp/partials/post_list.html", {"page_obj": page_obj})
+
+    return render(request, "instavibeapp/feed.html", {"page_obj": page_obj})
 
 
 def login_view(request):
@@ -122,14 +144,18 @@ def test_view(request):
 
 @login_required
 def profile_view(request, username):
-    user_obj = get_object_or_404(User, username=username)
+    try: 
+        user_obj = User.objects.get(username=username)
+    except ObjectDoesNotExist:
+        return render(request, 'instavibeapp/error_pages/usernotfound.html', {
+        'username': username
+    })
     profile=user_obj.profile
     posts = Post.objects.filter(owner=user_obj).prefetch_related('likes', 'comments').order_by('-created_at')
     viewing_user = request.user
 
     
-    following_status = viewing_user.profile.is_following_to(user_obj) if viewing_user != profile.user else False
-    
+    following_status = viewing_user.profile.is_following_to(user_obj)
     return render(request, 'instavibeapp/profile.html', {
         'viewing_user': viewing_user,
         'profile': profile,
@@ -326,6 +352,45 @@ def following_list(request, username):
 @login_required
 def notifications_view(request):
     notifications = Notification.objects.filter(receiver=request.user).order_by('-created_at')
+    # Prepare message and timestamp for template
+    messages = []
+    for n in notifications:
+        if n.type == "like":
+            message = f"{n.sender} liked your post with caption: '{n.post.caption}'"
+        elif n.type == "comment":
+            message = f"{n.sender} commented on your post with caption: '{n.post.caption}'"
+        elif n.type == "follow":
+            message = f"{n.sender} started following you."
+        timestamp = localtime(n.created_at)
+
+        messages.append({
+            "message": message,
+            "timestamp": timestamp
+        })
+
+
     return render(request, 'instavibeapp/notifications.html', {
-        'notifications': notifications
+        'messages': messages
     })
+
+@login_required
+def explore_view(request):
+    profiles=Profile.objects.all().exclude(user=request.user)
+    profiles_with_follow_status = [
+        {
+            'profile': profile_obj,
+            'is_following_to': request.user.profile.is_following_to(profile_obj.user)
+        }
+        for profile_obj in profiles
+    ]
+    return render(request, "instavibeapp/explore.html", {'profiles_with_follow_status': profiles_with_follow_status})
+
+
+"""
+default_image_file = File(open(default_image_path, 'rb'))
+
+for profile in Profile.objects.all():
+    if not profile.image or not os.path.isfile(profile.image.path):
+        profile.image.save(os.path.basename(default_image_path), default_image_file, save=True)
+
+"""

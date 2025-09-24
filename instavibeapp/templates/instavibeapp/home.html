@@ -3,16 +3,8 @@
 {% block title %}Home {% endblock %}
 
 {% block content %}
-  
-<!-- Main Content -->
-<div class="mt-20 mb-10 text-black px-4">
-  {% if user.is_authenticated %}
-    <p>Hello, <strong>{{ user.username }}</strong>! You are logged in.</p>
-  {% else %}
-    <p>Please log in to access your profile and posts.</p>
-  {% endif %}
-  {% for _ in repeat_list %}
-    <p>Please log in to access your profile and posts.</p>
-  {% endfor %}
-</div>
+<h1>
+  Sweet HOme INstavibe
+</h1>
 {% endblock %}
+

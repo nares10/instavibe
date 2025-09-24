@@ -22,16 +22,9 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('instavibeapp.urls')),
-    path('accounts/', include('allauth.urls')),  # this line for adding google social login by allauth
+    path('accounts/', include('allauth.urls')),  
 ] 
 
 if settings.DEBUG:
     urlpatterns += [path("__reload__/", include("django_browser_reload.urls")),]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-if not settings.TESTING:
-    from debug_toolbar.toolbar import debug_toolbar_urls
-
-    urlpatterns = [
-        *urlpatterns,
-    ] + debug_toolbar_urls()

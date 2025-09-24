@@ -47,14 +47,10 @@
                     </a>
                 </div>
 
-                {% if user != profile.user and profile.user != viewing_user %}
-                
-                    <div id="follow-button-container">
-                        {% include "instavibeapp/partials/follow_button.html" %}
-                    </div>
-
-
+                {% if profile.user != viewing_user %}
+                        {% include "instavibeapp/partials/follow_button.html" with is_following_to=following_status %}
                 {% endif %}
+                
             </div>
         </div>
                     
@@ -108,8 +104,11 @@
                                    class="text-red-600 hover:underline">Delete</a>
                             </div>
                             
+                            
 
                         </div>
+                        {# Comment Button #}
+                        
                     </div>
                 {% endfor %}
             </div>

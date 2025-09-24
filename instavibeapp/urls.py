@@ -3,6 +3,7 @@ from . import views
 
 app_name = 'instavibeapp'
 urlpatterns = [
+
     path('', views.home_view, name='home'),
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
@@ -12,6 +13,11 @@ urlpatterns = [
     # Notifications
     path('notifications/', views.notifications_view, name='notifications'),
     
+    #Explore Page:
+    path("explore/", views.explore_view, name='explore'),
+    #Feed
+    path("feed/", views.feed_view, name="feed"),
+
     # Profile-related
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('<str:username>/following-list/', views.following_list, name='following_list'),
@@ -31,8 +37,5 @@ urlpatterns = [
 
     # Follow system
     path('follow/<str:username>/', views.follow_unfollow, name='follow_unfollow'),
-    
-    
-
 
 ]

@@ -3,8 +3,13 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from ..models import Like, Comment, Follow, Notification
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_notification(sender, receiver, notif_type, post=None):
+    logger.info(f"At Signal lEVEL: Creating notification: {notif_type} from {sender} to {receiver}")
+
     notification = Notification.objects.create(
         sender=sender,
         receiver=receiver,
@@ -16,6 +21,7 @@ def create_notification(sender, receiver, notif_type, post=None):
     from asgiref.sync import async_to_sync
     from channels.layers import get_channel_layer
     channel_layer = get_channel_layer()
+    logger.info(f"Sending notification via channel layer to user_{receiver.id}")
     async_to_sync(channel_layer.group_send)(
         f"user_{receiver.id}",
         {
@@ -25,7 +31,7 @@ def create_notification(sender, receiver, notif_type, post=None):
                 "type": notification.type,
                 "sender": sender.username,
                 "post": post.id if post else None,
-                "created_at": str(notification.created_at),
+                "created_at": notification.created_at.isoformat(),
             }
         }
     )

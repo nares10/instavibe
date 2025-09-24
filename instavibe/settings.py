@@ -21,10 +21,8 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-+xe@5--iaz!s2_yr2(cpsj)10gyednr%r!#ux6u4bpu5ito0*i'
 
@@ -32,7 +30,6 @@ SECRET_KEY = 'django-insecure-+xe@5--iaz!s2_yr2(cpsj)10gyednr%r!#ux6u4bpu5ito0*i
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '0.0.0.0',
     'localhost',
     '127.0.0.1',
 ]
@@ -60,16 +57,15 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    # ...other useful apps...
-    'django_extensions',
-    'widget_tweaks',
-    
+    # ...other useful apps...    
+    ##
+    'django_htmx',
 ]
-
 
 if DEBUG:
     # Add django_browser_reload only in DEBUG mode
     INSTALLED_APPS += ['django_browser_reload']
+    
 
 
 MIDDLEWARE = [
@@ -80,15 +76,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
 ]
 if DEBUG:
     # Add django_browser_reload middleware only in DEBUG mode
     MIDDLEWARE += [
-        "django_browser_reload.middleware.BrowserReloadMiddleware",
-        
-    ]
-
+        "django_browser_reload.middleware.BrowserReloadMiddleware"
+]
 ROOT_URLCONF = 'instavibe.urls'
 
 TEMPLATES = [
@@ -190,7 +185,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-SITE_ID = 2
+SITE_ID = 3
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -204,7 +199,7 @@ SOCIALACCOUNT_PROVIDERS = {
             'email',
         ],
         'AUTH_PARAMS': {
-            'access_type': 'offline',
+            'access_type': 'online',
         }
     }
 }
@@ -224,23 +219,25 @@ INTERNAL_IPS = [
     "localhost",
 ]
 
-TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
-
-if not TESTING:
-    INSTALLED_APPS = [
-        *INSTALLED_APPS,
-        "debug_toolbar",
-    ]
-    MIDDLEWARE = [
-        "debug_toolbar.middleware.DebugToolbarMiddleware",
-        *MIDDLEWARE,
-    ]
-
 ASGI_APPLICATION = 'instavibe.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [("redis", 6379)]},
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "debug.log",  # relative to manage.py
+        },
+    },
+    "root": {
+        "handlers": ["file"],
+        "level": "INFO",
     },
 }

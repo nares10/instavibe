@@ -9,10 +9,6 @@ ENV PYTHONUNBUFFERED 1
 # Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Install Node.js and npm
 RUN apt-get update && apt-get install -y curl \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
@@ -20,9 +16,12 @@ RUN apt-get update && apt-get install -y curl \
     && npm install -g npm@latest \
     && rm -rf /var/lib/apt/lists/*
 
+# Install dependencies
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
 EXPOSE 8000
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "instavibe.asgi:application"]
+CMD ["python", "manage.py", "runserver", "8000"]
