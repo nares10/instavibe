@@ -1,0 +1,396 @@
+import re
+from django.shortcuts import render,reverse, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .forms import ProfileForm
+from .models import Profile, Post, Like, Comment, Follow, Notification
+from .utils import encode_id, decode_id
+from django.utils.timezone import localtime
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.urls import path
+from django.db.models import Count, Exists, OuterRef, Q
+from django.template.loader import render_to_string
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+def home_view(request):
+    return render(request, "nexusapp/home.html")
+
+
+@login_required
+def feed_view(request):
+    page_number = request.GET.get("page", 1)
+    posts = Post.objects.all().order_by("-created_at")
+
+    paginator = Paginator(posts, 15)  # 15 posts per page
+    page_obj = paginator.get_page(page_number)
+
+    if request.htmx:  # HTMX request -> return only posts HTML
+        return render(request, "nexusapp/partials/post_list.html", {"page_obj": page_obj})
+
+    return render(request, "nexusapp/feed.html", {"page_obj": page_obj})
+
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('nexusapp:home')  
+        else:
+            messages.error(request, "Invalid username or password.")
+    
+    return render(request, 'nexusapp/login.html')
+
+
+def register_view(request):
+
+    COMMON_PASSWORDS = [
+        "password", "123456", "12345678", "qwerty", "abc123", "monkey", "1234567", "letmein",
+        "trustno1", "dragon", "baseball", "111111", "iloveyou", "adobe123", "123123", "admin",
+        "123456789", "1234567890", "1234", "sunshine", "welcome", "login", "solo", "photoshop",
+        "1qaz2wsx", "mustang", "access", "flower", "starwars", "shadow", "passw0rd", "master",
+        "654321", "555555", "lovely", "7777777", "!@#$%^&*", "888888", "password1", "superman",
+        "prince", "qwertyuiop", "696969", "hottie", "freedom", "hello", "charlie", "aa123456",
+        "azerty", "whatever", "donald", "batman", "zaq1zaq1", "qazwsx", "000000", "123qwe"
+    ]
+
+
+    def is_strong_password(password):
+        # At least 8 characters
+        if len(password) < 8:
+            return False, "Password must be at least 8 characters long."
+
+        # Must contain uppercase, lowercase, digit, and special character
+        if not re.search(r'[A-Z]', password):
+            return False, "Password must contain at least one uppercase letter."
+        if not re.search(r'[a-z]', password):
+            return False, "Password must contain at least one lowercase letter."
+        if not re.search(r'\d', password):
+            return False, "Password must contain at least one digit."
+        if not re.search(r'[^\w\s]', password):  # special char
+            return False, "Password must contain at least one special character."
+
+        # Check against common passwords
+        if password.lower() in COMMON_PASSWORDS:
+            return False, "Password is too common. Please choose a stronger password."
+
+        return True, ""
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        
+        if len(username) < 3 or len(username) > 50:
+            messages.error(request, "Username must be between 3 and 50 characters.")
+            return redirect('nexusapp:register')
+        
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', username):
+            messages.error(request, "Username can only contain letters, numbers, underscores, and hyphens.")
+            return redirect('nexusapp:register')
+        
+        if not username or not password or not confirm_password:
+            messages.error(request, "All fields are required.")
+            return redirect('nexusapp:register')
+        
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect('nexusapp:register')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already taken.")
+            return redirect('nexusapp:register')
+        
+        is_valid, error_message = is_strong_password(password)
+        if not is_valid:
+            messages.error(request, error_message)
+            return redirect('nexusapp:register')
+        
+        if len(username) < 3 or len(username) > 50:
+            messages.error(request, "Username must be between 3 and 50 characters.")
+            return redirect('nexusapp:register')
+        
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', username):
+            messages.error(request, "Username can only contain letters, numbers, underscores, and hyphens.")
+            return redirect('nexusapp:register')
+
+        # Create user
+        user = User.objects.create_user(username=username, password=password)
+        user.save()
+        return redirect('nexusapp:login')
+    
+    return render(request, 'nexusapp/register.html')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('nexusapp:login')
+
+
+def test_view(request):
+    return render(request, 'nexusapp/test.html')
+
+@login_required
+def profile_view(request, username):
+    try: 
+        user_obj = User.objects.get(username=username)
+    except ObjectDoesNotExist:
+        return render(request, 'nexusapp/error_pages/usernotfound.html', {
+        'username': username
+    })
+    profile=user_obj.profile
+    posts = Post.objects.filter(owner=user_obj).prefetch_related('likes', 'comments').order_by('-created_at')
+    viewing_user = request.user
+
+    
+    following_status = viewing_user.profile.is_following_to(user_obj)
+    return render(request, 'nexusapp/profile.html', {
+        'viewing_user': viewing_user,
+        'profile': profile,
+        'posts': posts,
+        'following_status': following_status
+    })
+    
+
+
+@login_required
+def edit_profile_view(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        bio = request.POST.get('bio', '')
+        image = request.FILES.get('image')
+        date_of_birth = request.POST.get('date_of_birth', None)
+        gender = request.POST.get('gender', '')
+
+        profile.bio = bio
+        if image:
+            profile.image = image
+        profile.date_of_birth = date_of_birth if date_of_birth else None
+        profile.gender = gender
+        profile.save()
+        return redirect(reverse('nexusapp:profile', kwargs={'username': request.user.username}))
+    return render(request, 'nexusapp/edit_profile.html', {'profile': profile})
+
+@login_required
+def create_post(request):
+    if request.method == 'POST':
+        image = request.FILES.get('image')
+        caption = request.POST.get('caption', '')
+        
+        if image:
+            post = Post.objects.create(
+                owner=request.user,
+                image=image,
+                caption=caption
+            )
+            messages.success(request, "Post created successfully!")
+            return redirect(reverse('nexusapp:profile', kwargs={'username': request.user.username}))
+        else:
+            messages.error(request, "Image is required!")
+    
+    return render(request, 'nexusapp/create_post.html')
+
+@login_required
+def edit_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
+    post = get_object_or_404(Post, id=post_id, owner=request.user)
+    
+    if request.method == 'POST':
+        image = request.FILES.get('image')
+        if image:
+            post.image = image
+        caption = request.POST.get('caption', '')
+        post.caption = caption
+        post.save()
+        messages.success(request, "Post updated successfully!")
+        return redirect(reverse('nexusapp:profile', kwargs={'username': request.user.username}))
+    
+    return render(request, 'nexusapp/edit_post.html', {'post': post})
+
+@login_required
+def delete_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
+    post = get_object_or_404(Post, id=post_id, owner=request.user)
+    
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, "Post deleted successfully!")
+        return redirect(reverse('nexusapp:profile', kwargs={'username': request.user.username}))
+    
+    return render(request, 'nexusapp/delete_post.html', {'post': post})
+
+@login_required
+@require_POST
+def like_post(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
+    post = get_object_or_404(Post, id=post_id)
+
+    like = Like.objects.filter(user=request.user, post=post).first()
+    if like:
+        like.delete()
+    else:
+        Like.objects.create(user=request.user, post=post)
+
+    return render(request, "nexusapp/partials/like_button.html", {
+        "post": post,
+        "user": request.user
+    })
+
+
+# nexusapp/views.py
+
+@login_required
+def add_comment(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.method == 'POST':
+        text = request.POST.get('text')
+        if text:
+            Comment.objects.create(
+                user=request.user,
+                post=post,
+                text=text
+            )
+            # Corrected line to reverse the URL with the correct username
+            return redirect(f'{reverse("nexusapp:view_comments", kwargs={"encoded_post_id": encoded_post_id})}#comment-form')
+
+    # This is an alternative redirect if you want to go back to the post's page
+    # It seems your intent is to redirect to the profile page of the post owner
+    return redirect(f'{reverse("nexusapp:profile", kwargs={"username": post.owner.username})}#post-{post_id}')
+
+@login_required
+def view_comments(request, encoded_post_id):
+    post_id = decode_id(encoded_post_id)
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comments.all().order_by('-created_at')
+    
+    return render(request, 'nexusapp/comments.html', {
+        'post': post,
+        'comments': comments,
+    })
+
+@login_required
+def delete_comment(request, encoded_comment_id):
+    comment_id = decode_id(encoded_comment_id)
+    comment = get_object_or_404(Comment, id=comment_id, user=request.user)
+    post_id = comment.post.id
+    comment.delete()
+    messages.success(request, "Comment deleted successfully!")
+    return redirect('nexusapp:view_comments', encoded_post_id=encode_id(post_id))
+
+@login_required
+@require_POST
+def follow_unfollow(request, username):
+    user_to_follow = get_object_or_404(User, username=username)
+
+    if user_to_follow == request.user:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'You cannot follow yourself'
+        })
+
+    follow, created = Follow.objects.get_or_create(
+        follower=request.user,
+        following=user_to_follow
+    )
+
+    if not created: # Already following, so unfollow
+        follow.delete()
+        is_following_to = False
+    else:
+        is_following_to = True
+
+    # Re-render the button partial
+    return render(request, "nexusapp/partials/follow_button.html", {
+        "profile": user_to_follow.profile,
+        "is_following_to": is_following_to,
+        "user": request.user
+    })
+
+
+@login_required
+def followers_list(request, username):
+    user = get_object_or_404(User, username=username)
+    followers = user.followers.all().select_related('follower__profile')
+
+    following_ids = set(
+        Follow.objects.filter(follower=request.user)
+        .values_list('following_id', flat=True)
+    )
+
+    
+    return render(request, 'nexusapp/followers_list.html', {
+        'user_profile': user.profile,
+        'followers': followers,
+        'following_ids': following_ids,
+    })
+
+@login_required
+def following_list(request, username):
+    
+    user = get_object_or_404(User, username=username)
+    following = user.following.all().select_related('following__profile')
+    
+    return render(request, 'nexusapp/following_list.html', {
+        'user_profile': user.profile,
+        'following': following
+    })
+
+@login_required
+def notifications_view(request):
+    notifications = Notification.objects.filter(receiver=request.user).order_by('-created_at')
+    # Prepare message and timestamp for template
+    messages = []
+    for n in notifications:
+        if n.type == "like":
+            message = f"{n.sender} liked your post with caption: '{n.post.caption}'"
+        elif n.type == "comment":
+            message = f"{n.sender} commented on your post with caption: '{n.post.caption}'"
+        elif n.type == "follow":
+            message = f"{n.sender} started following you."
+        timestamp = localtime(n.created_at)
+
+        messages.append({
+            "message": message,
+            "timestamp": timestamp
+        })
+
+
+    return render(request, 'nexusapp/notifications.html', {
+        'messages': messages
+    })
+
+@login_required
+def explore_view(request):
+    profiles=Profile.objects.all().exclude(user=request.user)
+    profiles_with_follow_status = [
+        {
+            'profile': profile_obj,
+            'is_following_to': request.user.profile.is_following_to(profile_obj.user)
+        }
+        for profile_obj in profiles
+    ]
+    return render(request, "nexusapp/explore.html", {'profiles_with_follow_status': profiles_with_follow_status})
+
+
+"""
+default_image_file = File(open(default_image_path, 'rb'))
+
+for profile in Profile.objects.all():
+    if not profile.image or not os.path.isfile(profile.image.path):
+        profile.image.save(os.path.basename(default_image_path), default_image_file, save=True)
+
+"""

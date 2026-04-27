@@ -1,4 +1,4 @@
-#!/home/nares/projects/instavibe/venv/bin/python
+#!/home/nares/projects/nexus/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

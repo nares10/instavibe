@@ -1,4 +1,4 @@
-#!/home/nares/projects/instavibe/venv/bin/python
+#!/home/nares/projects/nexus/venv/bin/python
 import sys
 from sqlparse.__main__ import main
 if __name__ == '__main__':

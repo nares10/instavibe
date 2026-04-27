@@ -1,0 +1,41 @@
+{% extends 'nexusapp/base.html' %} 
+{% block title %} Explore nexus {% endblock %} 
+
+{% block content %}
+<div class="m-10 p-6 bg-white shadow-lg rounded-lg">
+  <h1 class="text-2xl font-semibold mb-6 text-center">Explore</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 ">
+    {% for profile_data in profiles_with_follow_status %}
+    <a href="{% url 'nexusapp:profile' username=profile_data.profile.user.username %}">
+    <div class="flex items-center justify-center space-x-4 p-4 border-b border-gray-200 rounded-lg hover:bg-gray-50 transition-all">
+    
+      <div class="flex flex-grow">
+        <!-- Profile Image -->
+        
+          <span class="text-gray-800 font-medium text-lg">{{ profile_data.profile.user.username }}</span>
+        
+      </div>
+
+      <!-- Follow Button -->
+      <div id="follow-button-container-{{ profile_data.profile.user.username }}">
+        <form hx-post="{% url 'nexusapp:follow_unfollow' profile_data.profile.user.username %}"
+              hx-target="#follow-button-container-{{ profile_data.profile.user.username }}"
+              hx-swap="outerHTML">
+          {% csrf_token %}
+          <button type="submit"
+                  class="follow-button px-4 py-2 rounded-lg hover:opacity-90 transition duration-200 hover:scale-95 {% if profile_data.is_following_to %}bg-gray-600{% else %}bg-blue-600{% endif %} text-white">
+            {% if profile_data.is_following_to %}
+              Unfollow
+            {% else %}
+              Follow
+            {% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

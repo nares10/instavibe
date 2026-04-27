@@ -1,0 +1,13 @@
+{% extends 'nexusapp/base.html' %}
+{% block title %}Home {% endblock %}
+
+{% block content %}
+<h2>Feed</h2>
+<div id="feed-container">
+  {% include "nexusapp/partials/post_list.html" %}
+</div>
+
+<!-- Loading spinner -->
+<div id="loading" style="display:none; text-align:center;">Loading...</div>
+{% endblock %}
+

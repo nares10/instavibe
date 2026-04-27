@@ -1,4 +1,4 @@
-#!/home/nares/projects/instavibe/venv/bin/python3
+#!/home/nares/projects/nexus/venv/bin/python3
 import sys
 from slugify.__main__ import main
 if __name__ == '__main__':

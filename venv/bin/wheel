@@ -1,4 +1,4 @@
-#!/home/nares/projects/instavibe/venv/bin/python
+#!/home/nares/projects/nexus/venv/bin/python
 import sys
 from wheel.cli import main
 if __name__ == '__main__':

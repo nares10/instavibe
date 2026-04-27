@@ -1,4 +1,4 @@
-#!/home/nares/projects/instavibe/venv/bin/python
+#!/home/nares/projects/nexus/venv/bin/python
 import sys
 from pip._internal.cli.main import main
 if __name__ == '__main__':

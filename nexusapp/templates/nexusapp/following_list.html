@@ -1,0 +1,28 @@
+{% extends 'nexusapp/base.html' %}
+{% block title %}Following{% endblock %}
+
+{% block content %}
+<div class="m-20 p-10 bg-white flex flex-col gap-6 justify-center items-center">
+    <h2 class="">  {{user_profile.user.username}}'s Following List</h2>
+    <div >
+        {% for user- in followers%}
+                <div class="following-member" >
+                    <div>
+                        <img src="{{ follow.follower.profile.profile_picture.url }}" alt="{{ follow.follower.username }}'s profile picture" class="w-12 h-12 rounded-full object-cover">
+                        <span class="text-gray-800 font-medium">{{ follow.follower.username }}</span>
+                    </div>
+
+                    {% if request.user != follow.follower %}
+                    {% if following_status.follow.follower.id %}
+                        <form action="{% url 'follow_unfollow' encoded_user_id=follow.follower.profile.encoded_id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-gray-200 text-gray-800 px-4 py-1 rounded-full hover:bg-gray-300 transition">Unfollow</button>
+                        </form>
+                    {% endif %}
+		    {% endif %}
+                    </div>
+                </div>
+	{% endfor %}
+   </div>
+</dev>   
+{% endblock %}

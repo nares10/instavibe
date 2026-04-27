@@ -1,0 +1,16 @@
+{% extends 'nexusapp/base.html' %}
+{% block title %}Post by {{ post.user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 flex justify-center">
+    <div class="bg-white shadow-md rounded-lg p-4">
+        <img src="{{ post.image.url }}" 
+             alt="Full image" 
+             class="max-w-full h-auto rounded-lg">
+        {% if post.caption %}
+            <p class="mt-4 text-gray-700">{{ post.caption }}</p>
+        {% endif %}
+        <p class="text-sm text-gray-500 mt-2">Posted by {{ post.user.username }}</p>
+    </div>
+</div>
+{% endblock %}

@@ -158,9 +158,3 @@ This is a standalone web application developed using:
 - Not applicable (cloud hosted)
 
 ---
-
-## 6. **Appendix**
-
-- A. Use Case Diagrams
-- B. ER Diagram for database schema
-- C. API Documentation (Swagger/Postman)
